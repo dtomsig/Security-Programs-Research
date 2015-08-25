@@ -44,11 +44,13 @@ void printOptions()
     std::cout << termcolor::yellow << "\n\nCommand:" << std::endl;
     std::cout << termcolor::reset << termcolor::red << termcolor::bold 
               << termcolor::dark
-              << "  ./emailSpider " << termcolor::bold << termcolor::magenta
-              << "-h" << termcolor::reset << " [Host Name] " << termcolor::bold
-              << termcolor::magenta << "-p" << termcolor::reset << " [Port]" 
-              /* -o [Output File] 
-              << "--[Options]" */<< std::endl;
+              << "  ./emailSpider " << termcolor::reset << termcolor::bold
+              << termcolor::magenta << "-h" << termcolor::reset 
+              << " [Host Name] " << termcolor::bold << termcolor::magenta 
+              << "-p" << termcolor::reset << " [Port] " << termcolor::bold 
+              << termcolor::magenta << "-o " << termcolor::reset 
+              << "[Output File] " << termcolor::bold << termcolor::magenta 
+              << "--" << termcolor::reset << "[Options]" << std::endl;
 
     std::cout << termcolor::yellow << termcolor::bold << "\nParameters:" 
               << std::endl;
