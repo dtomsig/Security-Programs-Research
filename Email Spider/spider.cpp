@@ -1,60 +1,67 @@
-#include <iostream>
-#include <string>
+/*******************************************************************************
+* FILE: spider.cpp                                                             *         *                                                                              *
+* DESCRIPTION: spider.cpp is where the main method for emailSpider.exe lives.  *
+* It defines functions that are displayed when the process is run. It also     *
+* performs the core operation of spidering webpages for emails.                *
+*                                                                              *
+* OUTPUT FILE: emailSpider.exe                                                 *
+*******************************************************************************/
+
 #include <arpa/inet.h>
-#include <argp.h>
+#include <iostream>
+#include <iomanip>
+#include <string>
 #include <sys/socket.h>
-
-/* The program name that will be displayed to the user. */
-const char *argp_program_version = "emailSpider v 1.0.0";
+#include <termcolor/termcolor.hpp>
 
 
-/* The program documentation that will be displayed to the user. */
-char doc[] = "emailSpider - a program to harvest emails from a domain";
-
-/* The description for the arguments that will be passed into the program */
-//char args_doc[] = "ARG1 ARG2";
-
-/* List of arguments that the program will take. */
-struct arguments
+void printOptions()
 {
-    std::string hostName;
-};
+    std::cout << "\n\n\n" << std::endl;
+    std::cout << termcolor::green << termcolor::bold
+              << std::setw(65) 
+              << "                   _ _   ______       _     _             " 
+              << std::endl;
+    std::cout << std::setw(65)
+              << "                  (_) | / _____)     (_)   | |            "
+              << std::endl;
+    std::cout << std::setw(65)
+              << " _____ ____  _____ _| |( (____  ____  _  __| |_____  ____ "
+              << std::endl;
+    std::cout << std::setw(65)
+              << "| ___ |    \\(____ | | | \\____ \\|  _ \\| |/ _  | ___ |/ ___)"
+              << std::endl;
+    std::cout << std::setw(65)
+              << "| ____| | | / ___ | | | _____) ) |_| | ( (_| | ____| |    "
+              << std::endl;
+    std::cout << std::setw(65)
+              << "|_____)_|_|_\\_____|_|\\_|______/|  __/|_|\\____|_____)_|    "
+              << std::endl;
+    std::cout << std::setw(65)
+              << "                               |_|                        "
+              << std::endl;
 
-/* List of arguments displayed in option form. */
-static struct argp_option options[] = 
-{
-    {"Host Name",      'h', 0, 0, ""}
+    std::cout << termcolor::yellow << "\n\nCommand:" << std::endl;
+    std::cout << termcolor::reset << termcolor::red << termcolor::bold 
+              << termcolor::dark
+              << "  ./emailSpider " << termcolor::bold << termcolor::magenta
+              << "-h" << termcolor::reset << " [Host Name] " << termcolor::bold
+              << termcolor::magenta << "-p" << termcolor::reset << " [Port]" 
+              /* -o [Output File] 
+              << "--[Options]" */<< std::endl;
 
-};
-
-
-/* Function that sets the parsing options. */
-static error_t parse_opt(int key, char *arg, struct argp_state *state)
-{
-    arguments *arguments = static_cast<*arguments>((*state).input);
-
-    switch(key)
-    {
-        case('h'):
-            (*arguments).hostName = "gwas";
-            break;
-
-        default:
-            return ARGP_ERR_UNKNOWN;
-    }
-    return 0;
+    std::cout << termcolor::yellow << termcolor::bold << "\nParameters:" 
+              << std::endl;
+    std::cout << termcolor::reset << termcolor::bold << termcolor::magenta
+              << std::left << std::setw(15) << "  -h" << termcolor::reset
+              << "The host name of the highest level of the web page." 
+              << std::endl;
 }
-
-
-/* The argument parser with no option for argument documentation. */
-static struct argp argp = {options, parse_opt, 0, doc};
 
 
 int main(int argc, char **argv)
 {
-
-    arguments arguments;
-    argp_parse(&argp, argc, argv, 0, 0, &arguments);
+    printOptions();
 
 
     int socket_desc;
