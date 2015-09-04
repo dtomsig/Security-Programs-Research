@@ -9,3 +9,5 @@ all: $(PROGS)
 spider: ${OBJECTS} spider.cpp
 	${CXX} ${CXXFLAGS} ${OBJECTS} ${INCLUDES} spider.cpp -o emailSpider
 
+clean:
+
