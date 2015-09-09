@@ -8,6 +8,8 @@
 * OUTPUT FILE: emailSpider.exe                                                 *
 *******************************************************************************/
 
+
+
 #include <arpa/inet.h>
 #include <cstring>
 #include <iostream>
@@ -15,9 +17,11 @@
 #include <fstream>
 #include <getopt.h>
 #include <netdb.h>
+#include <queue>
 #include <string>
 #include <sys/socket.h>
 #include <termcolor/termcolor.hpp>
+
 
 
 /*******************************************************************************
@@ -29,6 +33,7 @@
 *                                                                              *
 * PARAMETERS: (none)                                                           *
 *******************************************************************************/
+
 void printOptions()
 {
     std::cout << "\n\n\n" << std::endl;
@@ -59,28 +64,28 @@ void printOptions()
     std::cout << termcolor::yellow << "\n\nCommand:" << std::endl;
     std::cout << termcolor::reset << termcolor::red << termcolor::bold 
               << "  ./emailSpider " << termcolor::reset << termcolor::bold
-              << termcolor::magenta << "-h" << termcolor::reset 
-              << " [Host Name] " << termcolor::bold << termcolor::magenta 
+              << termcolor::blue << "-h" << termcolor::reset 
+              << " [Host Name] " << termcolor::bold << termcolor::blue 
               << "-p" << termcolor::reset << " [Port] " << termcolor::bold 
-              << termcolor::magenta << "-o " << termcolor::reset 
-              << "[Output File] " << termcolor::bold << termcolor::magenta 
+              << termcolor::blue << "-o " << termcolor::reset 
+              << "[Output File] " << termcolor::bold << termcolor::blue 
               << "--" << termcolor::reset << " [Options]" << std::endl;
 
     std::cout << termcolor::yellow << termcolor::bold << "\nParameters:" 
               << std::endl;
-    std::cout << termcolor::reset << termcolor::bold << termcolor::magenta
+    std::cout << termcolor::reset << termcolor::bold << termcolor::blue
               << std::left << std::setw(15) << "  -h" << termcolor::reset
               << "The host name of the highest level of the web page." 
               << std::endl;
-    std::cout << termcolor::reset << termcolor::bold << termcolor::magenta
+    std::cout << termcolor::reset << termcolor::bold << termcolor::blue 
               << std::left << std::setw(15) << "  -p" << termcolor::reset
               << "The port used either 443 or 80." 
               << std::endl; 
-    std::cout << termcolor::reset << termcolor::bold << termcolor::magenta
+    std::cout << termcolor::reset << termcolor::bold << termcolor::blue
               << std::left << std::setw(15) << "  -o" << termcolor::reset
               << "The name of the output file for spidered email addresses." 
               << std::endl; 
-    std::cout << termcolor::reset << termcolor::bold << termcolor::magenta
+    std::cout << termcolor::reset << termcolor::bold << termcolor::blue
               << std::left << std::setw(15) << "  --help" << termcolor::reset
               << "Display the help screen." 
               << std::endl; 
@@ -89,49 +94,170 @@ void printOptions()
     std::cout << termcolor::reset << std::endl;
 }
 
-void connect()
+
+
+/*******************************************************************************
+* FUNCTION: connect(std::string hostName)                                      *
+*                                                                              *                                                                                     *
+* DESCRIPTION: connect attempts to connect to the incoming host.               *
+*                                                                              *
+* PARAMETERS: (-hostName: The host name that will be connected to.)            *
+*******************************************************************************/
+
+int connect(std::string hostName)
 {
-    int status;
+	/*
+	** "statusAddr" refers to the status after getaddrinfo() has been used 
+	**  to fill the necessary structures for connecting to the host.
+	**
+	** "statusSocketConnect" refers to the status after a socket connection has
+	**  been attempted
+	**
+	** "socketfd" refers to the handle associated with creating a socket.
+	**
+	** "len" refers to the length of the GET message to the web server.
+	**
+	** "bytes_sent" refers to the number of bytes sent to the server. 
+	**
+	** "bytes_received" refers to the number of bytes received from GET request.
+	**
+	** "incoming_data_buffer" is an array that 
+	**
+	** "msg" refers to the GET message sent to the webserver.
+	**
+	** "addrinfo" refers to the structure that contains address information in
+	**  order to create a socket connection. 
+	**
+	** "host_info_list" is a pointer to an addrinfo structure that is used in 
+	**  the getaddrinfo() function. 
+	*/	
+	
+    int statusAddr, statusSocketConnect, socketfd, len;
+    ssize_t bytes_sent, bytes_received;
+    char incoming_data_buffer[4000];
+    const char *msg = ("GET / HTTP/1.1\nhost:" + hostName + "\n\n").c_str();
     struct addrinfo host_info;
     struct addrinfo *host_info_list;
-
+    
+    
+    /* 
+    ** These commands are necessary to fill the address info structures with 
+    ** information associated with the particular webpage.
+    */
     memset(&host_info, 0, sizeof host_info);
-
     host_info.ai_family = AF_UNSPEC;
     host_info.ai_socktype = SOCK_STREAM;
-
-    status = getaddrinfo("www.google.com", "80", &host_info, &host_info_list);
- 
-    if(status)
-        std::cout << "The status is connected" << std::endl;
+    statusAddr = getaddrinfo(hostName.c_str(), "443", &host_info,
+                             &host_info_list);
+    if(statusAddr != 0)
+    {
+        std::cout << "Get addr info error" << std::endl;
+        return -1;
+    }
     else
-        std::cout << "The status is not connected" << std::endl;
+        std::cout << "No getaddrinfo error" << std::endl;
 
-    /* Creates a socket. */
-    int socketfd;
+    /* 
+    ** These commands are necessary in order to create a socket given the 
+    ** address information used above. 
+    */
     socketfd = socket((*host_info_list).ai_family, 
                       (*host_info_list).ai_socktype, 
                       (*host_info_list).ai_protocol);
 
     if(socketfd == -1)
+    {
         std::cout << "Socket error" << std::endl;
+        return -1;
+    }
     else
         std::cout << "There is no socket error" << std::endl;
+        
+        
+    /* 
+    ** These commands connect the socket to the web server and sends the GET 
+    ** request (stored in "msg") to the webserver. It also receives the message
+    ** and stores it in "incoming_data_buffer". 
+    */
+    statusSocketConnect = connect(socketfd, host_info_list->ai_addr, 
+                                  host_info_list->ai_addrlen);
+    if(statusSocketConnect == -1)  
+    {
+        std::cout << "Connect error" << std::endl;
+        return -1;
+    }
+    
+    len = strlen(msg);
+    bytes_sent = send(socketfd, msg, len, 0);	
+    bytes_received = recv(socketfd, incoming_data_buffer,1000, 0);
+    
+    if(bytes_received == 0)
+    {
+        std::cout << "host shut down." << std::endl;
+        return -1;
+    }
+    if(bytes_received == -1)std::cout << "recieve error!" << std::endl ;
+    std::cout << bytes_received << " bytes recieved :" << std::endl ;
+    std::cout << incoming_data_buffer << std::endl;
 }
+
+
+
+/*******************************************************************************
+* FUNCTION: spider(std::string hostName, std::ofstream &outputFile )           *
+*                                                                              *                                                                                     *
+* DESCRIPTION: This function controls the logical level of spidering.          *
+*                                                                              *
+* PARAMETERS: (-hostName: The hostname that will be connected to.,             *
+* -outPutFile: The output file stream that will contain the store the spidered *
+* email addresses.)                                                            *
+*******************************************************************************/
+
+void spider(std::string hostName, std::ofstream &outputFile)
+{   
+    std::queue <std::string> urls;
+    
+    /* Sets the default values for 
+	
+	/* Attempts initial connection to determine if hostname is valid. */
+    if(connect(hostName) == -1)
+    {
+	    std::cout << termcolor::reset << termcolor::red <<
+	    "\nError: Unable to connect to specified host: \"" + hostName + "\"."
+        << std::endl;	
+	}
+	else
+	{
+		
+    }
+}
+
+
 
 int main(int argc, char **argv)
 {
 	/*
 	** "c" is an argument that is used in getopt_long() for parsing arguments.
+	** 
 	** "displayHelpFlag" is a flag for displaying the help menu based on what
 	**  the user enters as arguments.
-	** "searchDepth" represents the 
 	**
+	** "searchDepth" represents the depth that the spider will go into when
+	**  searching for emails.
+	**
+	** "hostName" represents the highest level that will be spidered by the 
+	**  program.
+	** 
+	** "outputFileName" represents the output file that will store all of the 
+	**  spidered email addresses. 
+	**
+	** "outputFile" refers to the output filestream associated with 
+	**  outputFileName
 	*/ 
-	
     int c, displayHelpFlag, searchDepth;
     std::string hostName, outputFileName;
-    
+    std::ofstream outputFile;
+
     /* 
     ** Default options are set here. These can change based upon what the user
     ** enters in as arguments. 
@@ -141,7 +267,10 @@ int main(int argc, char **argv)
     outputFileName = "default.txt";
     searchDepth = 3;
 
-    /* Structure used to define what the arguments are. */
+    /*
+    ** Structure used to define what the arguments are that can be passed into
+    ** the program. This is a standard structure in getopt.h
+    */
     static option longopts[] = 	
     { 
         {       "help",              no_argument,   &displayHelpFlag,     1},
@@ -159,32 +288,33 @@ int main(int argc, char **argv)
         switch (c) 
         {
             case('h'):
-                std::cout << "GWAS";
                 hostName = optarg;
                 displayHelpFlag = 0;
                 break;
+                
             case('o'):
                 outputFileName = optarg;
                 displayHelpFlag = 0;
                 break;
+                
             case('?'):
                 displayHelpFlag = 0;
         }
-    };
-    std::cout << "Hostname is " << hostName << "and outputfile name is "
-              << outputFileName;
-
+    }
+    
     /* 
-     * Determines what operation to perform based upon what was entered into
-     * the program. 
-     */
+    ** Determines what operation to perform based upon what was entered into
+    ** the program. 
+    */
 
     if(displayHelpFlag)
         printOptions();
     else
-    {
-	    
-    }
-
+	{
+		outputFile.open(outputFileName);
+		spider(hostName, outputFile);
+	}
+	
+	outputFile.close();
 
 }
