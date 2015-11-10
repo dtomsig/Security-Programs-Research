@@ -27,8 +27,6 @@
 ** a hostname (i.e. www.google.com) and a subdirectory/file within that larger 
 ** page.
 **
-** "emailFormat" represents a regular expression for an email within a web
-** page. 
 */
 
 struct url 
@@ -165,13 +163,17 @@ void findEmails(std::string &getResponse, std::ofstream &outputFile)
 *                      -urls: The queue of URLS that will be added to.         *               
 *******************************************************************************/
 
-void findUrls(std::string getResponse, std::queue<url> *urls)
+void findUrls(std::string &getResponse, std::queue<url> &urls)
 {
     /*
     ** 
     */
     
     std::regex urlFormat(".[a-zA-Z0-9].");
+    std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
+                                                        getResponse.end(), 
+                                                        urlFormat);
+    std::regex_iterator<std::string::iterator> iteratorEnd;
     
 }
 
@@ -382,7 +384,7 @@ void spider(std::string hostName, std::ofstream &outputFile, int searchDepth)
                                                 + urls.front().subDirectory
                                                 ,currentSocketfd);
                 findEmails(getResponse, outputFile);
-                findUrls(getResponse, &urls);                   
+                findUrls(getResponse, urls);                   
                 urls.pop();
             }
 	    }
@@ -474,7 +476,6 @@ int main(int argc, char **argv)
 		outputFile.open(outputFileName);
 		spider(hostName, outputFile, searchDepth);
 	}
-    std::string gwas = "nigger";
-	findEmails(gwas, outputFile);
+    
 	outputFile.close();
 }
