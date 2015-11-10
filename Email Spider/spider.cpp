@@ -2,27 +2,43 @@
 * FILE: spider.cpp                                                             *
 *                                                                              *                                                                                     *
 * DESCRIPTION: spider.cpp is where the main method for emailSpider.exe lives.  *
-* It defines functions that are displayed when the process is run. It performs *	
-* the core operation of spidering webpages for emails.                         *
+* It performs *the core operation of spidering webpages for emails.            *
 *                                                                              *
 * OUTPUT FILE: emailSpider.exe                                                 *
 *******************************************************************************/
 
-
-
 #include <arpa/inet.h>
 #include <cstring>
-#include <iostream>
-#include <iomanip>
 #include <fcntl.h>
 #include <fstream>
 #include <getopt.h>
+#include <iomanip>
 #include <netdb.h>
-#include <queue> 		
+#include <queue> 
+#include <regex>		
 #include <string>
 #include <sys/socket.h>
 #include <termcolor/termcolor.hpp>
 
+/*
+** GLOBAL VARIABLES:
+** 
+** "url" represents an entire page that will be used for spidering. It contains
+** a hostname (i.e. www.google.com) and a subdirectory/file within that larger 
+** page.
+**
+** "emailFormat" represents a regular expression for an email within a web
+** page. 
+*/
+
+struct url 
+{
+    std::string hostName, subDirectory;
+    int searchDepth;
+        
+    url(std::string h, std::string s, int d) : hostName(h), subDirectory(s),
+        searchDepth(d) {}	  
+};
 
 
 /*******************************************************************************
@@ -32,7 +48,7 @@
 * running ./emailSpider. It is called when --help is used as an option or      *
 * when there is no input into the emailSpider program.                         *
 *                                                                              *
-* PARAMETERS: (None)                                                           *
+* PARAMETERS: None                                                             *
 *******************************************************************************/
 
 void printOptions()
@@ -106,36 +122,57 @@ void printOptions()
 
 /*******************************************************************************
 * FUNCTION: findEmails(std::string getResponse)                                *
-*                                                                              *                                                                                     *
-* DESCRIPTION: findEmails receives a raw GET response and returns an array of  *
-* strings containing all of the email addresses located in that GET response.  *                                             *
+*                                                                              *                                                                                 *
+* DESCRIPTION: findEmails receives a raw GET response and writes the emails    *
+* directly to an output file stream.                                           *
 *                                                                              *
-* PARAMETERS: (-getResponse: The GET response from the HTTP server that will be*
-* used to obtain email addresses.)                                             *
+* PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
+*                             be used to obtain email addresses. Passed by     *
+*                             reference.                                       *
+*                -outputFile: The ouptut file that will contain spidered email *
+*                             addresses.                                       *                                                                       *
 *******************************************************************************/
 
-std::string* findEmails(std::string getResponse)
+void findEmails(std::string &getResponse, std::ofstream &outputFile)
 {
-    //std::string emails[];
-    
-    
-  //  return emails;
+    /* 
+    ** "emailFormat" is a regular expression for email addresses.
+    ** 
+    ** 
+    */
+    std::regex emailFormat("[a-zA-Z0-9]@[a-zA-Z0-9].");
+    std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
+                                                        getResponse.end(), 
+                                                        emailFormat);
+    std::regex_iterator<std::string::iterator> iteratorEnd;
+
+    while(iterator != iteratorEnd) 
+    {
+        outputFile << (*iterator).str() << "\n";
+        ++iterator;
+    }
 }
 
 
 /*******************************************************************************
 * FUNCTION: findUrls(std::string getResponse)                                  *
 *                                                                              *                                                                                     *
-* DESCRIPTION: findUrls receives a raw GET response and returns an array of    *
-* strings containing all of the email addresses located in that GET response.  *                                             *
+* DESCRIPTION: findUrls receives a raw GET response and modifies a queue of    *
+* URLS to hold additional URLs for spidering purposes.                         *
 *                                                                              *
-* PARAMETERS: (-getResponse: The GET response from the HTTP server that will be*
-* used to obtain email addresses.)                                             *
+* PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
+*                             be used to obtain email addresses.               *                                                        *
+*                      -urls: The queue of URLS that will be added to.         *               
 *******************************************************************************/
 
-std::string* findUrls(std::string getResponse)
+void findUrls(std::string getResponse, std::queue<url> *urls)
 {
-	
+    /*
+    ** 
+    */
+    
+    std::regex urlFormat(".[a-zA-Z0-9].");
+    
 }
 
 
@@ -146,7 +183,7 @@ std::string* findUrls(std::string getResponse)
 * top-level hostname. If it is unsuccessful, -1 is returned. Otherwise, the    *
 * file descriptor is returned after a connection.                              *
 *                                                                              *
-* PARAMETERS: (-hostName: The host name that will be connected to.)            *
+* PARAMETERS:      -hostName: The host name that will be connected to.         *
 *******************************************************************************/
 
 int connect(std::string hostName)
@@ -205,9 +242,7 @@ int connect(std::string hostName)
         std::cout << "There is no socket error" << std::endl;
        
     /* 
-    ** These commands connect the socket to the web server and sends the GET 
-    ** request (stored in "msg") to the webserver. It also receives the message
-    ** and stores it in "incoming_data_buffer". 
+    ** These commands connect the socket to the web server. 
     */
     statusSocketConnect = connect(socketfd, (*host_info_list).ai_addr, 
                                   (*host_info_list).ai_addrlen);
@@ -227,13 +262,14 @@ int connect(std::string hostName)
 *                                                                              *                                                                                     *
 * DESCRIPTION: disconnect closes the socket                                    *
 *                                                                              *
-* PARAMETERS: (-socketfd: The file descriptor of the socket that will be       *
-*               closed.)                                                       *
+* PARAMETERS:      -socketfd: The file descriptor of the socket that will be   *
+*                             closed.                                          *
 *******************************************************************************/
 
 void disconnect(int socketfd)
 {
     close(socketfd);
+    return;
 }
 
 
@@ -242,10 +278,10 @@ void disconnect(int socketfd)
 *                                                                              *                                                                                     *
 * DESCRIPTION: obtainGetResponse attempts to.                                  *
 *                                                                              *
-* PARAMETERS: (-hostName: The host name that will be connected to.)            *
+* PARAMETERS:      -hostName: The host name that will be connected to.         *
 *******************************************************************************/
 
-std::string* obtainGetResponse(std::string url, int socketfd)
+std::string obtainGetResponse(std::string url, int socketfd)
 {
     /*
     ** "len" refers to the length of the GET message to the web server.
@@ -259,14 +295,18 @@ std::string* obtainGetResponse(std::string url, int socketfd)
     **
     ** "pageSource" refers to the string that contains the page source.
     **
-    ** "msg" refers to the GET message sent to the webserver. http://www.google.com/test/1
-    */	
+    ** "msg" refers to the GET message sent to the webserver. 
+    */		
     int len;
     ssize_t bytes_sent, bytes_received;
     char incoming_data_buffer[1448];
-    std::cout << url.find("//");
-    std::string pageSource, msg = ("GET "  "HTTP/1.0\r\nHost:" 
-                                    "\r\n\r\n");                                 
+    std::string pageSource, msg = ("GET /" + url.substr(std::min(url.find("/", 
+                                    7), url.length()),  
+                                    url.length() - 1) + " HTTP/1.0\r\nHost:" 
+                                    + url.substr(url.find("//") + 2, 
+                                    (url.find("/", 7) - 7)) + "\r\n\r\n");
+                                    
+    std::cout << msg;                
     len = strlen(msg.c_str());
     bytes_sent = send(socketfd, msg.c_str(), len, 0);	
         
@@ -277,6 +317,8 @@ std::string* obtainGetResponse(std::string url, int socketfd)
     }
     
     std::cout << pageSource;
+    
+    return pageSource;
 } 
 
 
@@ -285,48 +327,64 @@ std::string* obtainGetResponse(std::string url, int socketfd)
 *                                                                              *                                                                                     *
 * DESCRIPTION: This function controls the logical level of spidering.          *
 *                                                                              *
-* PARAMETERS: (-hostName: The hostname that will be connected to.,             *
-*              -outPutFile: The output file stream that will contain the store *
-*                           the spidered  email addresses.)                    *                                           *
+* PARAMETERS:      -hostName: The hostname that will be connected to.          *
+*                -outPutFile: The output file stream that will contain the     *
+*                             the spidered  email addresses.                   *                                           *
 *******************************************************************************/
 
 void spider(std::string hostName, std::ofstream &outputFile, int searchDepth)
 {   
-	/*
-	** "url" represents a url that will be used for spidering that contains 
-	** the depth of the url.
-	** 
-	** "urls" represents all of the urls that remain to be spidered by the 
-	** program.
-	**
-	** "currentSocketfd" represents the current socket file descriptor that the
-	** program is connected to. 
-	*/
-    struct url 
-    {
-        std::string urlAddress;
-        int searchDepth;
-        
-        url(std::string u, int s) : urlAddress(u), searchDepth(s) {}	  
-    };
+    /*
+    ** "getResponse" represents the getResponse from the web server. 
+    ** 
+    ** "urls" represents all of the urls that remain to be spidered by the 
+    ** program. It is a queue of the url structure that was declared before.
+    **
+    ** "currentSocketfd" represents the current socket file descriptor that the
+    ** program is connected to. 
+    **
+    ** "getResponse" represents the GET response to be parsed.
+    **
+    ** "currentHost" stores the current host that is connected to. 
+    */
+    
     std::queue<url> urls;
     int currentSocketfd;
+    std::string getResponse, currentHost;
     
 	/* Attempts initial connection to determine if hostname is valid. */
-    if((currentSocketfd = connect(hostName)) && currentSocketfd != -1)
+    if((currentSocketfd = connect(hostName)) && currentSocketfd == -1)
     {
 	    std::cout << termcolor::reset << termcolor::red 
-	              << "\nError: Unable to connect to specified host: \"" 
-	                 + hostName + "\"." << std::endl;	
+	              << "\nError: Unable to connect to specified host: " 
+	                 + hostName << std::endl;	
 	}
 	else
 	{
-        urls.push(url("http://" + hostName, 1));
+        urls.push(url("www.google.com", "/", 1));
+        currentHost = urls.front().hostName;
         
         /* Main spidering loop lies here. */
         while(!urls.empty())
         {
-            obtainGetResponse(urls.front().urlAddress, currentSocketfd);
+            if(urls.front().searchDepth == searchDepth)
+                urls.pop();
+            else
+            {
+                if(currentHost != urls.front().hostName)
+                {
+                    currentHost = urls.front().hostName;
+                    disconnect(currentSocketfd);
+                    
+                }
+                getResponse = obtainGetResponse("http://" + 
+                                                urls.front().hostName
+                                                + urls.front().subDirectory
+                                                ,currentSocketfd);
+                findEmails(getResponse, outputFile);
+                findUrls(getResponse, &urls);                   
+                urls.pop();
+            }
 	    }
     }
 }
@@ -416,6 +474,7 @@ int main(int argc, char **argv)
 		outputFile.open(outputFileName);
 		spider(hostName, outputFile, searchDepth);
 	}
-	
+    std::string gwas = "nigger";
+	findEmails(gwas, outputFile);
 	outputFile.close();
 }
