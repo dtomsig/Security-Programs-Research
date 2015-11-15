@@ -1,6 +1,6 @@
 OBJECTS = 
 CXX = g++
-CXXFLAGS = -std=gnu++0x
+CXXFLAGS = -std=gnu++0x 
 PROGS = spider
 INCLUDES = -I./include/
 

@@ -2,23 +2,13 @@
 * FILE: spider.cpp                                                             *
 *                                                                              *                                                                                     *
 * DESCRIPTION: spider.cpp is where the main method for emailSpider.exe lives.  *
-* It performs *the core operation of spidering webpages for emails.            *
+* It performs  the core operation of spidering webpages for emails.            *
 *                                                                              *
 * OUTPUT FILE: emailSpider.exe                                                 *
 *******************************************************************************/
 
-#include <arpa/inet.h>
-#include <cstring>
-#include <fcntl.h>
-#include <fstream>
-#include <getopt.h>
-#include <iomanip>
-#include <netdb.h>
-#include <queue> 
-#include <regex>		
-#include <string>
-#include <sys/socket.h>
-#include <termcolor/termcolor.hpp>
+#include "spider.hpp"
+#include "test.hpp"
 
 /*
 ** GLOBAL VARIABLES:
@@ -26,7 +16,6 @@
 ** "url" represents an entire page that will be used for spidering. It contains
 ** a hostname (i.e. www.google.com) and a subdirectory/file within that larger 
 ** page.
-**
 */
 
 struct url 
@@ -103,7 +92,11 @@ void printOptions()
     std::cout << termcolor::reset << termcolor::bold << termcolor::blue
               << std::left << std::setw(15) << "  --help" << termcolor::reset
               << "Display the help screen." 
-              << std::endl; 
+              << std::endl;
+    std::cout << termcolor::reset << termcolor::bold << termcolor::blue
+              << std::left << std::setw(15) << "  --test" << termcolor::reset
+              << "Display the results of function testing." 
+              << std::endl;
     std::cout << termcolor::reset << termcolor::yellow << termcolor::bold 
               << "\nExample:" << std::endl;
     std::cout << termcolor::reset;
@@ -131,14 +124,16 @@ void printOptions()
 *                             addresses.                                       *                                                                       *
 *******************************************************************************/
 
-void findEmails(std::string &getResponse, std::ofstream &outputFile)
+void findEmails(std::string &getResponse, std::fstream &outputFile)
 {
     /* 
     ** "emailFormat" is a regular expression for email addresses.
     ** 
-    ** 
+    ** "iterator" is a regex iterator for the incoming getResponse.
+    **
+    ** "iteratorEnd" is the last location in the incoming getREsponse.
     */
-    std::regex emailFormat("[a-zA-Z0-9]@[a-zA-Z0-9].");
+    std::regex emailFormat("[a-zA-Z0-9]+@[a-zA-Z0-9]+.[a-zA-Z0-9]+");
     std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
                                                         getResponse.end(), 
                                                         emailFormat);
@@ -147,7 +142,7 @@ void findEmails(std::string &getResponse, std::ofstream &outputFile)
     while(iterator != iteratorEnd) 
     {
         outputFile << (*iterator).str() << "\n";
-        ++iterator;
+        iterator++;
     }
 }
 
@@ -163,18 +158,24 @@ void findEmails(std::string &getResponse, std::ofstream &outputFile)
 *                      -urls: The queue of URLS that will be added to.         *               
 *******************************************************************************/
 
-void findUrls(std::string &getResponse, std::queue<url> &urls)
+void findUrls(std::string &getResponse, std::queue<url> &urls, int currentDepth)
 {
-    /*
-    ** 
-    */
-    
-    std::regex urlFormat(".[a-zA-Z0-9].");
+    std::regex urlFormat("href=http.[a-zA-Z0-9]+.[a-zA-Z0-9]+.[a-zA-Z0-9]/"
+                         "[a-zA-Z0-9]");
     std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
                                                         getResponse.end(), 
                                                         urlFormat);
     std::regex_iterator<std::string::iterator> iteratorEnd;
+    std::string hostName, subDirectory;
     
+    while(iterator != iteratorEnd) 
+    {
+        hostName = (*iterator).str().substr(((*iterator).str()).find("//") + 2, 
+                                             (*iterator).str().find("/"));
+        subDirectory;
+        urls.push(url(hostName, subDirectory, currentDepth + 1));
+        iterator++;
+    }    
 }
 
 
@@ -307,7 +308,6 @@ std::string obtainGetResponse(std::string url, int socketfd)
                                     url.length() - 1) + " HTTP/1.0\r\nHost:" 
                                     + url.substr(url.find("//") + 2, 
                                     (url.find("/", 7) - 7)) + "\r\n\r\n");
-                                    
     std::cout << msg;                
     len = strlen(msg.c_str());
     bytes_sent = send(socketfd, msg.c_str(), len, 0);	
@@ -325,16 +325,17 @@ std::string obtainGetResponse(std::string url, int socketfd)
 
 
 /*******************************************************************************
-* FUNCTION: spider(std::string hostName, std::ofstream &outputFile )           *
+* FUNCTION: spider(std::string hostName, std::fstream &outputFile )           *
 *                                                                              *                                                                                     *
 * DESCRIPTION: This function controls the logical level of spidering.          *
 *                                                                              *
 * PARAMETERS:      -hostName: The hostname that will be connected to.          *
 *                -outPutFile: The output file stream that will contain the     *
-*                             the spidered  email addresses.                   *                                           *
+*                             the spidered  email addresses.                   *
+**           -maxSearchDepth:                                                  *                                        
 *******************************************************************************/
 
-void spider(std::string hostName, std::ofstream &outputFile, int searchDepth)
+void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
 {   
     /*
     ** "getResponse" represents the getResponse from the web server. 
@@ -369,7 +370,7 @@ void spider(std::string hostName, std::ofstream &outputFile, int searchDepth)
         /* Main spidering loop lies here. */
         while(!urls.empty())
         {
-            if(urls.front().searchDepth == searchDepth)
+            if(urls.front().searchDepth == maxSearchDepth)
                 urls.pop();
             else
             {
@@ -377,14 +378,14 @@ void spider(std::string hostName, std::ofstream &outputFile, int searchDepth)
                 {
                     currentHost = urls.front().hostName;
                     disconnect(currentSocketfd);
-                    
+                    connect(urls.front().hostName);
                 }
                 getResponse = obtainGetResponse("http://" + 
                                                 urls.front().hostName
                                                 + urls.front().subDirectory
                                                 ,currentSocketfd);
                 findEmails(getResponse, outputFile);
-                findUrls(getResponse, urls);                   
+                findUrls(getResponse, urls, urls.front().searchDepth);                   
                 urls.pop();
             }
 	    }
@@ -402,6 +403,9 @@ int main(int argc, char **argv)
     ** "searchDepth" represents the depth that the spider will go into when
     **  searching for emails.
     **
+    ** "testingModeFlag" represents whether or not the tests will be run in the 
+    **  program.
+    **
     ** "hostName" represents the highest level that will be spidered by the 
     **  program.
     ** 
@@ -411,29 +415,32 @@ int main(int argc, char **argv)
     ** "outputFile" refers to the output filestream associated with 
     **  outputFileName
     */ 
-    int c, displayHelpFlag, searchDepth;
+    int c, displayHelpFlag, searchDepth, testingModeFlag;
     std::string hostName, outputFileName;
-    std::ofstream outputFile;
+    std::fstream outputFile;
 
     /* 
     ** Default options are set here. These can change based upon what the user
     ** enters in as arguments. 
     */                                                                       
     hostName = "www.google.com";
-    displayHelpFlag = 1; 
+    displayHelpFlag = 0; 
     outputFileName = "emails.txt";
     searchDepth = 3;
+    testingModeFlag = 0;
 
     /*
     ** Structure used to define what the arguments are that can be passed into
     ** the program. This is a standard structure in getopt.h
     */
+    int option_index = 4;
     static option longopts[] = 	
     { 
         {       "help",              no_argument,   &displayHelpFlag,     1},
+        {       "test",              no_argument,   &testingModeFlag,     1},
         {            0,        required_argument,                  0,   'h'},
         {            0,        optional_argument,                  0,   'o'}, 
-        {            0,        optional_argument,                  0,   'd'},        
+        {            0,        optional_argument,                  0,   'd'},
         {            0,                        0,                  0,     0}
     };
 
@@ -441,7 +448,7 @@ int main(int argc, char **argv)
     ** Cycles through argv to obtain what the arguments are that were passed 
     ** in. 
     */
-    while ((c = getopt_long(argc, argv, "h:o:", longopts, 0)) != -1) 
+    while ((c = getopt_long(argc, argv, "h:o:", longopts, &option_index)) != -1) 
     {
         switch (c) 
         {
@@ -454,7 +461,7 @@ int main(int argc, char **argv)
                 outputFileName = optarg;
                 displayHelpFlag = 0;
                 break;
-                
+                    
             case('?'):
                 displayHelpFlag = 0;
                 break;
@@ -467,13 +474,13 @@ int main(int argc, char **argv)
     */
     if(displayHelpFlag)
         printOptions();
-   /* else if()
+    else if(testingModeFlag)
     {
-		
-	}*/
+		runTests();
+	}
     else
 	{
-		outputFile.open(outputFileName);
+		outputFile.open(outputFileName, std::ios::out);
 		spider(hostName, outputFile, searchDepth);
 	}
     
