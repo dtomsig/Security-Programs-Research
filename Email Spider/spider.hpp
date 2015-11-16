@@ -24,7 +24,23 @@
 #include <sys/socket.h>
 #include <termcolor/termcolor.hpp>
 
-struct url;
+/*
+** GLOBAL VARIABLES:
+** 
+** "url" represents an entire page that will be used for spidering. It contains
+** a hostname (i.e. www.google.com) and a subdirectory/file within that larger 
+** page.
+*/
+
+struct url 
+{
+    std::string hostName, subDirectory;
+    int searchDepth;
+        
+    url(std::string h, std::string s, int d) : hostName(h), subDirectory(s),
+        searchDepth(d) {}	  
+};
+
 void printOptions();
 void findEmails(std::string &getResponse, std::fstream &outputFile);
 void findUrls(std::string &getResponse, std::queue<url> &urls, 

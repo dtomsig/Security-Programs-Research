@@ -120,14 +120,12 @@ void testFindUrls()
     
     int parityFlag = 1;
     std::queue<url> testUrls, correctUrls;
-    std::string test1 = "test", 
+    std::string test1 = "http://www.google.com/test", 
                 test2 = "test2", 
                 test3 = "test3";
             
     findUrls(test1, testUrls, 30);
-    findUrls(test2, testUrls, 30);
-    findUrls(test3, testUrls, 30);
-    
+    std::cout << testUrls.size() << std::endl;
 }
 
 /*******************************************************************************
@@ -156,6 +154,7 @@ void runTests()
     testFindEmails();
     
     std::cout << "\n\nTesting findUrls():" << std::endl;
+    testFindUrls();
 }
 
 #endif
