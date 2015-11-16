@@ -134,7 +134,7 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
 *                                                                              *                                                                                     *
 * DESCRIPTION: findUrls receives a raw GET response and modifies a queue of    *
 * URLS to hold additional URLs for spidering purposes.                         *
-*                                                                              *
+*                                                                               *
 * PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
 *                             be used to obtain email addresses.               *                                                        *
 *                      -urls: The queue of URLS that will be added to.         *               
