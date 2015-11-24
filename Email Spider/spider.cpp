@@ -14,8 +14,7 @@
 * FUNCTION: printOptions()                                                     *
 *                                                                              *                                                                                     *
 * DESCRIPTION: printOptions prints all of the options available to the user    *
-* running ./emailSpider. It is called when --help is used as an option or      *
-* when there is no input into the emailSpider program.                         *
+* running ./emailSpider. It is called when --help is used as an option.        *
 *                                                                              *
 * PARAMETERS: None                                                             *
 *******************************************************************************/
@@ -137,11 +136,33 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
 *                                                                              *
 * PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
 *                             be used to obtain email addresses.               *                                                        *
-*                      -urls: The queue of URLS that will be added to.         *               
+*                      -urls: The queue of URLS that will be added to.         *
+*              -currentDepth: The current depth fo the struct URL that gets    *
+*                             passed in.                                       *               
 *******************************************************************************/
 
-void findUrls(std::string &getResponse, std::queue<url> &urls, int currentDepth)
+void findUrls(std::string &getResponse, std::queue<url> &urls)
 {
+    /* 
+    ** "urlFormat" is a regular expression for email addresses.
+    ** 
+    ** "iterator" is a regex iterator for the incoming getResponse.
+    **
+    ** "iteratorEnd" is the last location in the incoming getREsponse.
+    **
+    ** "hostName" holds the hostname of the URL that was spidered.
+    **
+    ** "subDirectory" holds the subdiretory fo the URL that was spidered.
+    **
+    ** "posBeginningHostName" holds the first location of the hostname of the 
+    ** URL in order to calculate hostName.
+    **
+    ** "posEndHostName" holds the end location of the hostname in order to
+    ** calculate hostName as well as subDirectory.
+    **
+    ** "currentDepth" holds the current depth of the struct URL that is passed 
+    ** in.
+    */
     std::regex urlFormat("htt(p|ps)://[a-zA-Z0-9]+.[a-zA-Z0-9]+.[a-zA-Z0-9]+/"
                          "[\\S]+");
     std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
@@ -149,8 +170,9 @@ void findUrls(std::string &getResponse, std::queue<url> &urls, int currentDepth)
                                                         urlFormat);
     std::regex_iterator<std::string::iterator> iteratorEnd;
     std::string hostName, subDirectory;
-    int posBeginningHostname, posEndHostname;
+    int posBeginningHostname, posEndHostname, currentDepth;
     
+    currentDepth = urls.front().searchDepth;
     
     while(iterator != iteratorEnd) 
     {
@@ -319,7 +341,7 @@ std::string obtainGetResponse(std::string url, int socketfd)
 * PARAMETERS:      -hostName: The hostname that will be connected to.          *
 *                -outPutFile: The output file stream that will contain the     *
 *                             the spidered  email addresses.                   *
-**           -maxSearchDepth:                                                  *                                        
+**           -maxSearchDepth: The highest search depth that will be spidered.  *                                        
 *******************************************************************************/
 
 void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
@@ -372,7 +394,7 @@ void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
                                                 + urls.front().subDirectory
                                                 ,currentSocketfd);
                 findEmails(getResponse, outputFile);
-                findUrls(getResponse, urls, urls.front().searchDepth);                   
+                findUrls(getResponse, urls);                   
                 urls.pop();
             }
 	    }

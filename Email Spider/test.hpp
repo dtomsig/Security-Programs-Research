@@ -123,8 +123,8 @@ void testFindUrls()
                 testString;
     
     
-    findUrls(test1, testUrls, 30);
-    findUrls(test2, testUrls, 30);
+    findUrls(test1, testUrls);
+    findUrls(test2, testUrls);
     
     correctTests.open("testing/correctFindUrls.txt");
     

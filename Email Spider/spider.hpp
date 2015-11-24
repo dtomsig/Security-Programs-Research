@@ -43,8 +43,7 @@ struct url
 
 void printOptions();
 void findEmails(std::string &getResponse, std::fstream &outputFile);
-void findUrls(std::string &getResponse, std::queue<url> &urls, 
-              int currentDepth);
+void findUrls(std::string &getResponse, std::queue<url> &urls);
 int connect(std::string hostName);
 void disconnect(int socketfd);
 std::string obtainGetResponse(std::string url, int socketfd);
