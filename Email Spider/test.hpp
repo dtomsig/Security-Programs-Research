@@ -29,7 +29,7 @@
 void testFindEmails()
 {
     /*
-    ** "testCounter" counts the test number for test/pass purposes.
+    ** "testCounter" counts the test number for displaying the test number.
     ** 
     ** "parityFlag" represents whether or not the file produced by 
     ** findEmails() matches a predetermined test file.
@@ -98,29 +98,55 @@ void testFindEmails()
 void testFindUrls()
 {
     /*
-    ** "parityFlag" represents whether or not the file produced by 
-    ** findEmails() matches a predetermined test file.
+    ** "testCounter" counts the test number for displaying the test number. 
     **
     ** "testUrls" is the url queue used for testing.
     **
-    ** "correctUrl" is the url queue containing correct results of findUrls();
+    ** "correctUrl" is the url queue containing test results of findUrls().
+    **
+    ** "correctTests" is the file containing correct results of findUrls(). 
     **
     ** "test1" is the first test case.
     **
     ** "test2" is the second test case.
     **
     ** "test3" is the third test case.
+    **
+    ** "testString" is a temporary string to hold correct tests from the file.
     */
-    
-    int parityFlag = 1;
+    int testCounter = 1;
     std::queue<url> testUrls, correctUrls;
+    std::fstream correctTests;
     std::string test1 = "http://www.google.com/test/test1", 
-                test2 = "test2", 
-                test3 = "test3";
-            
+                test2 = "https://www.reddit.com/test", 
+                test3 = "test3",
+                testString;
+    
+    
     findUrls(test1, testUrls, 30);
-    std::cout << testUrls.front().hostName << std::endl;
-    std::cout << testUrls.front().subDirectory << std::endl;
+    findUrls(test2, testUrls, 30);
+    
+    correctTests.open("testing/correctFindUrls.txt");
+    
+    while(correctTests >> testString)
+    {
+        if(testString == testUrls.front().hostName)
+        { 
+            correctTests >> testString;
+            
+            if(testString == testUrls.front().subDirectory)
+                std::cout << "Test " << testCounter << ": PASS" << std::endl;
+            else
+                std::cout << "Test " << testCounter << ": FAIL" << std::endl;
+        }
+        else
+        {
+            correctTests >> testString;
+            std::cout << "Test " << testCounter << ": FAIL" << std::endl;
+        }
+        testUrls.pop();
+        testCounter++;
+    }
 }
 
 
@@ -149,7 +175,7 @@ void runTests()
     std::cout << "\n\nTesting findEmails():\n" << std::endl;
     testFindEmails();
     
-    std::cout << "\n\nTesting findUrls():" << std::endl;
+    std::cout << "\n\nTesting findUrls():\n" << std::endl;
     testFindUrls();
 }
 

@@ -134,7 +134,7 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
 *                                                                              *                                                                                     *
 * DESCRIPTION: findUrls receives a raw GET response and modifies a queue of    *
 * URLS to hold additional URLs for spidering purposes.                         *
-*                                                                               *
+*                                                                              *
 * PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
 *                             be used to obtain email addresses.               *                                                        *
 *                      -urls: The queue of URLS that will be added to.         *               
@@ -142,20 +142,26 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
 
 void findUrls(std::string &getResponse, std::queue<url> &urls, int currentDepth)
 {
-    std::regex urlFormat("htt[p||ps]://[a-zA-Z0-9]+.[a-zA-Z0-9]+.[a-zA-Z0-9]+/"
+    std::regex urlFormat("htt(p|ps)://[a-zA-Z0-9]+.[a-zA-Z0-9]+.[a-zA-Z0-9]+/"
                          "[\\S]+");
     std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
                                                         getResponse.end(), 
                                                         urlFormat);
     std::regex_iterator<std::string::iterator> iteratorEnd;
     std::string hostName, subDirectory;
+    int posBeginningHostname, posEndHostname;
+    
     
     while(iterator != iteratorEnd) 
     {
-        hostName = (*iterator).str().substr(((*iterator).str()).find("//") + 2, 
-                                             (*iterator).str().find("/"));
-        subDirectory = (*iterator).str().substr(((*iterator).str()).find("/",9),
-                                                (*iterator).str().length());
+        posBeginningHostname = ((*iterator).str()).find("//"); 
+        posEndHostname = ((*iterator).str()).find("/", 8);
+        hostName = (*iterator).str().substr(posBeginningHostname + 2, 
+                                            posEndHostname - 2 -
+                                            posBeginningHostname);
+        subDirectory = (*iterator).str().substr(posEndHostname, 
+                                                ((*iterator).str()).length());
+                                                
         urls.push(url(hostName, subDirectory, currentDepth + 1));
         iterator++;
     }    
@@ -350,7 +356,7 @@ void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
         urls.push(url("www.google.com", "/", 1));
         currentHost = urls.front().hostName;
         
-        /* Main spidering loop lies here. */
+        /* Main spidering logic controller is here. */
         while(!urls.empty())
         {
             if(urls.front().searchDepth == maxSearchDepth)
