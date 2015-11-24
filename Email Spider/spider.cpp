@@ -306,9 +306,7 @@ std::string obtainGetResponse(std::string url, int socketfd)
         incoming_data_buffer[bytes_received] = '\0';
         pageSource += incoming_data_buffer;      
     }
-    
-    std::cout << pageSource;
-    
+        
     return pageSource;
 } 
 
@@ -353,7 +351,7 @@ void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
 	}
 	else
 	{
-        urls.push(url("www.google.com", "/", 1));
+        urls.push(url(hostName, "/", 1));
         currentHost = urls.front().hostName;
         
         /* Main spidering logic controller is here. */
@@ -412,7 +410,7 @@ int main(int argc, char **argv)
     ** Default options are set here. These can change based upon what the user
     ** enters in as arguments. 
     */                                                                       
-    hostName = "www.google.com";
+    hostName = "www.zybez.net";
     displayHelpFlag = 0; 
     outputFileName = "emails.txt";
     searchDepth = 3;
@@ -437,7 +435,7 @@ int main(int argc, char **argv)
     ** Cycles through argv to obtain what the arguments are that were passed 
     ** in. 
     */
-    while ((c = getopt_long(argc, argv, "h:o:", longopts, &option_index)) != -1) 
+    while ((c = getopt_long(argc, argv, "h:o:d:", longopts, &option_index)) != -1) 
     {
         switch (c) 
         {
@@ -445,6 +443,11 @@ int main(int argc, char **argv)
                 hostName = optarg;
                 displayHelpFlag = 0;
                 break;
+                
+            case('d'):
+                //searchDepth = optarg;
+                displayHelpFlag = 0;
+                break;  
                 
             case('o'):
                 outputFileName = optarg;
