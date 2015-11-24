@@ -29,6 +29,8 @@
 void testFindEmails()
 {
     /*
+    ** "testCounter" counts the test number for test/pass purposes.
+    ** 
     ** "parityFlag" represents whether or not the file produced by 
     ** findEmails() matches a predetermined test file.
     **
@@ -46,8 +48,7 @@ void testFindEmails()
     **
     ** "correctString" is the next string that is pulled out of correctTests.
     */
-    
-    int parityFlag = 1;
+    int testCounter = 1;
     std::fstream testFile, correctTests;
     std::string test1 = "gwis@gmail.com test2@yahoo.com",
                 test2 = "test",
@@ -70,24 +71,17 @@ void testFindEmails()
         if(correctTests >> correctString)
         {
             if(testString != correctString)
-                parityFlag = 0;
+                std::cout << "Test " << testCounter << ": FAIL" << std::endl;
+            else
+                std::cout << "Test " << testCounter << ": PASS" << std::endl;
         }
-        else
-        {
-            parityFlag = 0;
-            break;
-        }
+        testCounter++;
     }
-    
-    if(parityFlag)
-        std::cout << "Test: PASSED\n" << std::endl;
-    else
-        std::cout << "Test: FAILED\n" << std::endl;
-    
-    
+        
     testFile.close();
     correctTests.close();
 }
+
 
 /*******************************************************************************
 * FUNCTION: testFindUrls()                                                     *
@@ -120,13 +114,15 @@ void testFindUrls()
     
     int parityFlag = 1;
     std::queue<url> testUrls, correctUrls;
-    std::string test1 = "http://www.google.com/test", 
+    std::string test1 = "http://www.google.com/test/test1", 
                 test2 = "test2", 
                 test3 = "test3";
             
     findUrls(test1, testUrls, 30);
-    std::cout << testUrls.size() << std::endl;
+    std::cout << testUrls.front().hostName << std::endl;
+    std::cout << testUrls.front().subDirectory << std::endl;
 }
+
 
 /*******************************************************************************
 * FUNCTION: testObtainGetResponse()                                            *
@@ -150,7 +146,7 @@ void runTests()
 {
     std::cout << "\n\nBeginning testing of emailSpider functions." << std::endl;
     
-    std::cout << "\n\nTesting findEmails():" << std::endl;
+    std::cout << "\n\nTesting findEmails():\n" << std::endl;
     testFindEmails();
     
     std::cout << "\n\nTesting findUrls():" << std::endl;

@@ -142,8 +142,8 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
 
 void findUrls(std::string &getResponse, std::queue<url> &urls, int currentDepth)
 {
-    std::regex urlFormat("http://[a-zA-Z0-9]+.[a-zA-Z0-9]+.[a-zA-Z0-9]/"
-                         "[a-zA-Z0-9]");
+    std::regex urlFormat("htt[p||ps]://[a-zA-Z0-9]+.[a-zA-Z0-9]+.[a-zA-Z0-9]+/"
+                         "[\\S]+");
     std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
                                                         getResponse.end(), 
                                                         urlFormat);
@@ -154,7 +154,7 @@ void findUrls(std::string &getResponse, std::queue<url> &urls, int currentDepth)
     {
         hostName = (*iterator).str().substr(((*iterator).str()).find("//") + 2, 
                                              (*iterator).str().find("/"));
-        subDirectory = (*iterator).str().substr(((*iterator).str()).find("/",6),
+        subDirectory = (*iterator).str().substr(((*iterator).str()).find("/",9),
                                                 (*iterator).str().length());
         urls.push(url(hostName, subDirectory, currentDepth + 1));
         iterator++;
