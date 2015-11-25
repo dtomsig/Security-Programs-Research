@@ -314,7 +314,7 @@ std::string obtainGetResponse(std::string url, int socketfd)
     int len;
     ssize_t bytes_sent, bytes_received;
     char incoming_data_buffer[1448];
-    std::string pageSource, msg = ("GET /" + url.substr(std::min(url.find("/", 
+    std::string pageSource, msg = ("GET " + url.substr(std::min(url.find("/", 
                                     7), url.length()),  
                                     url.length() - 1) + " HTTP/1.0\r\nHost:" 
                                     + url.substr(url.find("//") + 2, 
@@ -490,13 +490,13 @@ int main(int argc, char **argv)
         printOptions();
     else if(testingModeFlag)
     {
-		runTests();
-	}
+        runTests();
+    }
     else
-	{
-		outputFile.open(outputFileName, std::ios::out);
-		spider(hostName, outputFile, searchDepth);
-	}
+    {
+        outputFile.open(outputFileName, std::ios::out);
+        spider(hostName, outputFile, searchDepth);
+    }
     
 	outputFile.close();
 }
