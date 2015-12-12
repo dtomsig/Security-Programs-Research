@@ -120,6 +120,10 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
                                                         emailFormat);
     std::regex_iterator<std::string::iterator> iteratorEnd;
 
+    /* 
+    ** Searches trhough the getResponse for emails and adds them to the \
+    ** email file. 
+    */
     while(iterator != iteratorEnd) 
     {
         outputFile << (*iterator).str() << "\n";
@@ -136,9 +140,7 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
 *                                                                              *
 * PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
 *                             be used to obtain email addresses.               *                                                        *
-*                      -urls: The queue of URLS that will be added to.         *
-*              -currentDepth: The current depth fo the struct URL that gets    *
-*                             passed in.                                       *               
+*                      -urls: The queue of URLS that will be added to.         *               
 *******************************************************************************/
 
 void findUrls(std::string &getResponse, std::queue<url> &urls)
@@ -174,6 +176,7 @@ void findUrls(std::string &getResponse, std::queue<url> &urls)
     
     currentDepth = urls.front().searchDepth;
     
+    /* Searches through the GET response for URlS and adds them to the queue. */
     while(iterator != iteratorEnd) 
     {
         posBeginningHostname = ((*iterator).str()).find("//"); 
@@ -255,9 +258,7 @@ int connect(std::string hostName)
     else
         std::cout << "There is no socket error" << std::endl;
        
-    /* 
-    ** These commands connect the socket to the web server. 
-    */
+    /* These commands connect the socket to the web server. */
     statusSocketConnect = connect(socketfd, (*host_info_list).ai_addr, 
                                   (*host_info_list).ai_addrlen);
                                   
@@ -322,7 +323,11 @@ std::string obtainGetResponse(std::string url, int socketfd)
     std::cout << msg;                
     len = strlen(msg.c_str());
     bytes_sent = send(socketfd, msg.c_str(), len, 0);	
-        
+    
+    /* 
+    ** Receives data from the socket until the socket has no more data. The data
+    ** is added to the page source string. 
+    */
     while((bytes_received = recv(socketfd, incoming_data_buffer, 1447, 0)))
     {
         incoming_data_buffer[bytes_received] = '\0';
@@ -341,14 +346,12 @@ std::string obtainGetResponse(std::string url, int socketfd)
 * PARAMETERS:      -hostName: The hostname that will be connected to.          *
 *                -outPutFile: The output file stream that will contain the     *
 *                             the spidered  email addresses.                   *
-**           -maxSearchDepth: The highest search depth that will be spidered.  *                                        
+*            -maxSearchDepth: The highest search depth that will be spidered.  *                                        
 *******************************************************************************/
 
 void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
 {   
-    /*
-    ** "getResponse" represents the getResponse from the web server. 
-    ** 
+    /* 
     ** "urls" represents all of the urls that remain to be spidered by the 
     ** program. It is a queue of the url structure that was declared before.
     **
@@ -455,7 +458,7 @@ int main(int argc, char **argv)
 
     /* 
     ** Cycles through argv to obtain what the arguments are that were passed 
-    ** in. 
+    ** in using the GNU getopt library. 
     */
     while ((c = getopt_long(argc, argv, "h:o:d:", longopts, &option_index)) != -1) 
     {
@@ -467,7 +470,7 @@ int main(int argc, char **argv)
                 break;
                 
             case('d'):
-                //searchDepth = optarg;
+                searchDepth = std::stoi(optarg);
                 displayHelpFlag = 0;
                 break;  
                 
@@ -494,7 +497,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        outputFile.open(outputFileName, std::ios::out);
+        outputFile.open(outputFileName, std::ios::out | std::ofstream::app);
         spider(hostName, outputFile, searchDepth);
     }
     
