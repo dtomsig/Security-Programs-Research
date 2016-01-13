@@ -56,7 +56,8 @@ void printOptions()
               << "[Search Depth] " << termcolor::bold << termcolor::blue
               << termcolor::blue << "-o " << termcolor::reset 
               << "[Output File] " << termcolor::bold << termcolor::blue 
-              << "--" << termcolor::reset << "          [Options]" << std::endl;
+              << "                    -- " << termcolor::reset  
+              << "[Options]" << std::endl;
 
     std::cout << termcolor::yellow << termcolor::bold << "\nParameters:" 
               << std::endl;

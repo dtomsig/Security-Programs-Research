@@ -1,7 +1,7 @@
                               emailSpider README:
                               
 How to run:
-
+    0. Must be on Linux.
     1. Type "make" in console in the directory with the makefile.
     2. Type "./emailSpider --help" to see all of the options.
     3. Replace the example URL with the URL you are interested in.
