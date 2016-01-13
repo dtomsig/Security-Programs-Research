@@ -52,9 +52,11 @@ void printOptions()
               << termcolor::blue << "-h" << termcolor::reset 
               << " [Host Name] " << termcolor::bold << termcolor::blue 
               << "-p" << termcolor::reset << " [Port] " << termcolor::bold 
+              << termcolor::blue << "-d " << termcolor::reset
+              << "[Search Depth] " << termcolor::bold << termcolor::blue
               << termcolor::blue << "-o " << termcolor::reset 
               << "[Output File] " << termcolor::bold << termcolor::blue 
-              << "--" << termcolor::reset << " [Options]" << std::endl;
+              << "--" << termcolor::reset << "          [Options]" << std::endl;
 
     std::cout << termcolor::yellow << termcolor::bold << "\nParameters:" 
               << std::endl;
@@ -339,7 +341,7 @@ std::string obtainGetResponse(std::string url, int socketfd)
 
 
 /*******************************************************************************
-* FUNCTION: spider(std::string hostName, std::fstream &outputFile )           *
+* FUNCTION: spider(std::string hostName, std::fstream &outputFile )            *
 *                                                                              *                                                                                     *
 * DESCRIPTION: This function controls the logical level of spidering.          *
 *                                                                              *
