@@ -17,6 +17,7 @@
 #include <getopt.h>
 #include <iomanip>
 #include <netdb.h>
+#include <pthread.h>
 #include <queue> 
 #include <regex>
 #include <sstream>		

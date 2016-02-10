@@ -66,14 +66,17 @@ void testFindEmails()
     testFile.close();
     testFile.open("testing/testFindEmails.txt");
     
+    std::cout << std::setw(16) << "EXPECTED" << std::setw(32) << "ACTUAL " 
+              << std::setw(32) << " STATUS" << std::endl;
+    
     while(testFile >> testString)
     {
         if(correctTests >> correctString)
         {
             if(testString != correctString)
-                std::cout << "Test " << testCounter << ": FAIL" << std::endl;
+                std::cout << "Test " << testCounter << ":" << testString << "FAIL" << std::endl;
             else
-                std::cout << "Test " << testCounter << ": PASS" << std::endl;
+                std::cout << "Test " << testCounter << ":" << testString << "PASS" << std::endl;
         }
         testCounter++;
     }
@@ -130,10 +133,12 @@ void testFindUrls()
     
     while(correctTests >> testString)
     {
+        std::cout << testString << std::endl;
+        std::cout << testUrls.front().hostName << std::endl;
         if(testString == testUrls.front().hostName)
         { 
             correctTests >> testString;
-            
+
             if(testString == testUrls.front().subDirectory)
                 std::cout << "Test " << testCounter << ": PASS" << std::endl;
             else

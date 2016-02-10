@@ -16,7 +16,7 @@ import sys
 HOST = "127.0.0.1"                                            #Host or User IP address
 PORT = 443                                                    #Port 
 USERNAME_FIELD = "j_username"                                 #Name of the parameter for 
-PASSWORD_FIELD = "j_password"                                 #Name of the parameter for pass
+PASSWORD_FIELD = "j_password"                                 #Name of the parameter     for pass
 FOUND = False                                                 #Default found variable
 PASSWORD_FILE = open('password.txt', 'r').read().split('\n')  #Set Password File                                                     
 USERNAME_FILE = open('username.txt', 'r').read().split('\n')  #Set Username File
