@@ -9,6 +9,7 @@
 
 #include "spider.hpp"
 #include "test.hpp"
+#include <thread>
 
 /*******************************************************************************
 * FUNCTION: printOptions()                                                     *
@@ -65,13 +66,17 @@ void printOptions()
               << std::left << std::setw(15) << "  -h" << termcolor::reset
               << "The host name of the highest level of the web page." 
               << std::endl;
+    std::cout << termcolor::reset << termcolor::bold << termcolor::blue
+              << std::left << std::setw(15) << "  -o" << termcolor::reset
+              << "The name of the output file for spidered email addresses." 
+              << std::endl; 
     std::cout << termcolor::reset << termcolor::bold << termcolor::blue 
               << std::left << std::setw(15) << "  -p" << termcolor::reset
               << "The port used either 443 or 80." 
               << std::endl; 
-    std::cout << termcolor::reset << termcolor::bold << termcolor::blue
-              << std::left << std::setw(15) << "  -o" << termcolor::reset
-              << "The name of the output file for spidered email addresses." 
+    std::cout << termcolor::reset << termcolor::bold << termcolor::blue 
+              << std::left << std::setw(15) << "  -t" << termcolor::reset
+              << "Number of threads to be used in the application." 
               << std::endl; 
     std::cout << termcolor::reset << termcolor::bold << termcolor::blue
               << std::left << std::setw(15) << "  --help" << termcolor::reset
@@ -114,9 +119,10 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
     ** 
     ** "iterator" is a regex iterator for the incoming getResponse.
     **
-    ** "iteratorEnd" is the last location in the incoming getREsponse.
+    ** "iteratorEnd" is the last location in the incoming getResponse.
     */
-    std::regex emailFormat("[a-zA-Z0-9]+@[a-zA-Z0-9]+.[a-zA-Z0-9]+");
+    std::regex emailFormat("[a-zA-Z0-9.]+@[a-zA-Z0-9]+(.com|.com.pa|.co.uk|"  
+                           ".de|.org|.us)");
     std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
                                                         getResponse.end(), 
                                                         emailFormat);
@@ -364,7 +370,6 @@ void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
     **
     ** "getResponse" represents the GET response to be parsed.
     */
-    
     int currentSocketfd;
     std::queue<url> urls;
     std::string currentHost, getResponse;
@@ -416,6 +421,8 @@ int main(int argc, char **argv)
     ** "displayHelpFlag" is a flag for displaying the help menu based on what
     **  the user enters as arguments.
     **
+    ** "numThreads" represents the number of threads the program will use.
+    **
     ** "searchDepth" represents the depth that the spider will go into when
     **  searching for emails.
     **
@@ -431,7 +438,7 @@ int main(int argc, char **argv)
     ** "outputFileName" represents the output file that will store all of the 
     **  spidered email addresses. 
     */ 
-    int c, displayHelpFlag, searchDepth, testingModeFlag;
+    int c, displayHelpFlag, numThreads, searchDepth, testingModeFlag;
     std::fstream outputFile;
     std::string hostName, outputFileName;
 
@@ -444,6 +451,7 @@ int main(int argc, char **argv)
     outputFileName = "emails.txt";
     searchDepth = 3;
     testingModeFlag = 0;
+    numThreads = 5;
 
     /*
     ** Structure used to define what the arguments are that can be passed into
@@ -457,6 +465,7 @@ int main(int argc, char **argv)
         {            0,        required_argument,                  0,   'h'},
         {            0,        optional_argument,                  0,   'o'}, 
         {            0,        optional_argument,                  0,   'd'},
+        {            0,        optional_argument,                  0,   't'},
         {            0,                        0,                  0,     0}
     };
 
@@ -464,7 +473,7 @@ int main(int argc, char **argv)
     ** Cycles through argv to obtain what the arguments are that were passed 
     ** in using the GNU getopt library. 
     */
-    while ((c = getopt_long(argc, argv, "h:o:d:", longopts, &option_index)) 
+    while ((c = getopt_long(argc, argv, "h:o:d:t:", longopts, &option_index)) 
             != -1) 
     {
         switch (c) 
@@ -483,13 +492,17 @@ int main(int argc, char **argv)
                 outputFileName = optarg;
                 displayHelpFlag = 0;
                 break;
-                    
+            
+            case('t'):
+                numThreads = std::stoi(optarg);
+                displayHelpFlag = 0;
+                
             case('?'):
                 displayHelpFlag = 0;
                 break;
         }
     }
-    
+
     /* 
     ** Determines what operation to perform based upon what was entered into
     ** the program. 

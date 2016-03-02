@@ -30,59 +30,82 @@ void testFindEmails()
 {
     /*
     ** "testCounter" counts the test number for displaying the test number.
-    ** 
-    ** "parityFlag" represents whether or not the file produced by 
-    ** findEmails() matches a predetermined test file.
+    **
+    ** "numTests" represents the total number of expected tests.
     **
     ** "testFile" is the file produced by findEmails().
     **
-    ** "correctTests" is the file containing correct results of findEmails();
+    ** "correctFile" is the file containing correct results of findEmails().
     **
-    ** "test1" is the first test case.
-    **
-    ** "test2" is the second test case.
-    **
-    ** "test3" is the third test case.
+    ** "test1" -> "test4" are the test cases.
     **
     ** "testString" is next string that is pulled out of the testFile.
     **
     ** "correctString" is the next string that is pulled out of correctTests.
     */
-    int testCounter = 1;
-    std::fstream testFile, correctTests;
+    int testCounter = 1, numTests;
+    std::fstream testFile, correctFile;
     std::string test1 = "gwis@gmail.com test2@yahoo.com",
-                test2 = "test",
+                test2 = "test this thing",
                 test3 = "capachone@gmail.com",
+                test4 = "a@wwwwww.0000",
+                test5 = "chapo.guzman@root.de",
                 testString,
                 correctString;   
                 
-    testFile.open("testing/testFindEmails.txt", std::ios::out);
-    correctTests.open("testing/correctFindEmails.txt");
+    testFile.open("testing/testFindEmails.txt", std::ios::in | std::ios::out);
+    correctFile.open("testing/correctFindEmails.txt");
   
     findEmails(test1, testFile);
+    testFile << "#\n";
     findEmails(test2, testFile);
+    testFile << "#\n";
     findEmails(test3, testFile);
+    testFile << "#\n";
+    findEmails(test4, testFile);
+    testFile << "#\n";
+    findEmails(test5, testFile);
+    testFile << "#\n";
+    numTests = 5;
     
-    testFile.close();
-    testFile.open("testing/testFindEmails.txt");
+    testFile.clear();
+    testFile.seekg(0, std::ios::beg);
     
-    std::cout << std::setw(16) << "EXPECTED" << std::setw(32) << "ACTUAL " 
-              << std::setw(32) << " STATUS" << std::endl;
+    std::cout << std::setw(18) << "EXPECTED" << std::setw(32) << "ACTUAL " 
+              << std::setw(28) << " STATUS\n" << std::endl;
     
-    while(testFile >> testString)
+    do
     {
-        if(correctTests >> correctString)
-        {
+        testFile >> testString;
+        correctFile >> correctString;
+        
+        std::cout << "Test " << testCounter << ":  " << std::endl;
+
+        while(testString != "#" || correctString != "#")
+        {                
             if(testString != correctString)
-                std::cout << "Test " << testCounter << ":" << testString << "FAIL" << std::endl;
+                std::cout << "          " << std::left << std::setw(33)
+                          << correctString << std::setw(28) << testString
+                          << "FAIL" << std::endl;
             else
-                std::cout << "Test " << testCounter << ":" << testString << "PASS" << std::endl;
+                std::cout << "          " << std::left << std::setw(33) 
+                          << correctString << std::setw(28) << testString
+                          << "PASS" << std::endl;
+                          
+            if(testString != "#")
+                testFile >> testString;
+            
+            if(correctString != "#")
+                correctFile >> correctString;
         }
+        
         testCounter++;
-    }
+        std::cout << std::endl;
+    }while(!(testCounter > numTests));
         
     testFile.close();
-    correctTests.close();
+    correctFile.close();
+    
 }
 
 
@@ -109,17 +132,13 @@ void testFindUrls()
     **
     ** "correctTests" is the file containing correct results of findUrls(). 
     **
-    ** "test1" is the first test case.
-    **
-    ** "test2" is the second test case.
-    **
-    ** "test3" is the third test case.
+    ** "test1" -> "test3" are the test cases.
     **
     ** "testString" is a temporary string to hold correct tests from the file.
     */
     int testCounter = 1;
     std::queue<url> testUrls, correctUrls;
-    std::fstream correctTests;
+    std::fstream correctFile;
     std::string test1 = "http://www.google.com/test/test1", 
                 test2 = "https://www.reddit.com/test", 
                 test3 = "test3",
@@ -129,25 +148,40 @@ void testFindUrls()
     findUrls(test1, testUrls);
     findUrls(test2, testUrls);
     
-    correctTests.open("testing/correctFindUrls.txt");
+    correctFile.open("testing/correctFindUrls.txt");
     
-    while(correctTests >> testString)
+    std::cout << std::right << std::setw(18) << "EXPECTED" << std::setw(32)
+              << "ACTUAL " << std::setw(28) << " STATUS\n" << std::endl;
+    
+    while(correctFile >> testString)
     {
-        std::cout << testString << std::endl;
-        std::cout << testUrls.front().hostName << std::endl;
+        std::cout << "Test " << testCounter << ":  " << std::endl;
+        
         if(testString == testUrls.front().hostName)
         { 
-            correctTests >> testString;
+            std::cout << "          " << std::left << std::setw(33) 
+                      << testString << std::setw(28) 
+                      << testUrls.front().hostName << "PASS" << std::endl;
+            correctFile >> testString;
 
             if(testString == testUrls.front().subDirectory)
-                std::cout << "Test " << testCounter << ": PASS" << std::endl;
+                std::cout << "          " << std::left << std::setw(33) 
+                      << testString << std::setw(28) 
+                      << testUrls.front().hostName << "PASS" << std::endl;
             else
-                std::cout << "Test " << testCounter << ": FAIL" << std::endl;
+                std::cout << "          " << std::left << std::setw(33) 
+                      << testString << std::setw(28) 
+                      << testUrls.front().hostName << "PASS" << std::endl;
         }
         else
         {
-            correctTests >> testString;
-            std::cout << "Test " << testCounter << ": FAIL" << std::endl;
+            std::cout << "          " << std::left << std::setw(33) << testString 
+                      << std::setw(28) << testUrls.front().hostName << "FAIL" 
+                      << std::endl;
+            correctFile >> testString;
+            std::cout << "          " << std::left << std::setw(33) << testString 
+                      << std::setw(28) << testUrls.front().hostName << "FAIL" 
+                      << std::endl;
         }
         testUrls.pop();
         testCounter++;
