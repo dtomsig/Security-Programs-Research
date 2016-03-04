@@ -25,7 +25,6 @@
 * PARAMETERS: None                                                             *
 *******************************************************************************/
 
-
 void testFindEmails()
 {
     /*
@@ -37,7 +36,7 @@ void testFindEmails()
     **
     ** "correctFile" is the file containing correct results of findEmails().
     **
-    ** "test1" -> "test4" are the test cases.
+    ** "test1" -> "test5" are the test cases.
     **
     ** "testString" is next string that is pulled out of the testFile.
     **

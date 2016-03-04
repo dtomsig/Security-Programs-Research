@@ -175,7 +175,7 @@ void findUrls(std::string &getResponse, std::queue<url> &urls)
     */
     int currentDepth, posBeginningHostname, posEndHostname; 
     std::regex urlFormat("htt(p|ps)://[a-zA-Z0-9]+.[a-zA-Z0-9]+.(.com|.co.uk)"
-                         "[\\S]*");
+                         "[^\"']*");
     std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
                                                         getResponse.end(), 
                                                         urlFormat);
@@ -188,13 +188,14 @@ void findUrls(std::string &getResponse, std::queue<url> &urls)
     while(iterator != iteratorEnd) 
     {
         posBeginningHostname = ((*iterator).str()).find("//") + 2; 
-        posEndHostname = std::min(((*iterator).str()).find("/", posBeginningHostname),
+        posEndHostname = std::min(((*iterator).str()).find("/", 
+                                    posBeginningHostname),
                                   (*iterator).str().size());
         hostName = (*iterator).str().substr(posBeginningHostname, 
                                             posEndHostname - 
                                             posBeginningHostname);
         subDirectory = (*iterator).str().substr(posEndHostname, 
-                       (*iterator).str().size());
+                                                - posEndHostname);
         if(subDirectory[subDirectory.size() - 1] == '/')
             subDirectory.pop_back();
         
