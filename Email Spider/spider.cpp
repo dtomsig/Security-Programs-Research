@@ -174,13 +174,13 @@ void findUrls(std::string &getResponse, std::queue<url> &urls)
     ** "subDirectory" holds the subdiretory fo the URL that was spidered.
     */
     int currentDepth, posBeginningHostname, posEndHostname; 
-    std::regex urlFormat("htt(p|ps)://[a-zA-Z0-9]+.[a-zA-Z0-9]+.[a-zA-Z0-9]+/"
-                         "[\\S]+");
+    std::regex urlFormat("htt(p|ps)://[a-zA-Z0-9]+.[a-zA-Z0-9]+.(.com|.co.uk)"
+                         "[\\S]*");
     std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
                                                         getResponse.end(), 
                                                         urlFormat);
     std::regex_iterator<std::string::iterator> iteratorEnd;
-    std::string hostName, subDirectory;
+    std::string hostName, subDirectory = "";
     
     currentDepth = urls.front().searchDepth;
     
@@ -188,11 +188,18 @@ void findUrls(std::string &getResponse, std::queue<url> &urls)
     while(iterator != iteratorEnd) 
     {
         posBeginningHostname = ((*iterator).str()).find("//") + 2; 
-        posEndHostname = ((*iterator).str()).find("/", 8);
+        posEndHostname = std::min(((*iterator).str()).find("/", posBeginningHostname),
+                                  (*iterator).str().size());
         hostName = (*iterator).str().substr(posBeginningHostname, 
-                                            posEndHostname);
+                                            posEndHostname - 
+                                            posBeginningHostname);
         subDirectory = (*iterator).str().substr(posEndHostname, 
-                                                ((*iterator).str()).find("\"", 8));
+                       (*iterator).str().size());
+        if(subDirectory[subDirectory.size() - 1] == '/')
+            subDirectory.pop_back();
+        
+        if(subDirectory == "")
+            subDirectory = "/";
         urls.push(url(hostName, subDirectory, currentDepth + 1));
         iterator++;
     }    
@@ -354,13 +361,15 @@ std::string obtainGetResponse(std::string url, int socketfd)
 * PARAMETERS:      -hostName: The hostname that will be connected to.          *
 *                -outPutFile: The output file stream that will contain the     *
 *                             the spidered  email addresses.                   *
-*            -maxSearchDepth: The highest search depth that will be spidered.  *                                        
+*            -maxSearchDepth: The highest search depth that will be spidered.  *
+*                -numThreads: The number of threads the program will use.      *                                        
 *******************************************************************************/
 
-void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
+void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth,
+            int numThreads)
 {   
     /* 
-    ** "currentSocketfd" represents the current socket file descriptor that the
+    ** "currentSocketfd" represents the current socket file descriptor   that the
     ** program is connected to. 
     **
     ** "urls" represents all of the urls that remain to be spidered by the 
@@ -399,13 +408,15 @@ void spider(std::string hostName, std::fstream &outputFile, int maxSearchDepth)
                     disconnect(currentSocketfd);
                     connect(urls.front().hostName);
                 }
-                getResponse = obtainGetResponse("http://" + 
-                                                urls.front().hostName
-                                                + urls.front().subDirectory
-                                                ,currentSocketfd);
-                findEmails(getResponse, outputFile);
-                findUrls(getResponse, urls);                   
-                urls.pop();
+                    std::thread newResponse;
+                    getResponse = obtainGetResponse("http://" + 
+                                                    urls.front().hostName
+                                                    + urls.front().subDirectory
+                                                    ,currentSocketfd);
+                    
+                    findEmails(getResponse, outputFile);
+                    findUrls(getResponse, urls);                   
+                    urls.pop();
             }
 	    }
     }
@@ -516,7 +527,7 @@ int main(int argc, char **argv)
     else
     {
         outputFile.open(outputFileName, std::ios::out | std::ofstream::app);
-        spider(hostName, outputFile, searchDepth);
+        spider(hostName, outputFile, searchDepth, numThreads);
     }
     
 	outputFile.close();

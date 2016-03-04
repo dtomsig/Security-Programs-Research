@@ -132,7 +132,7 @@ void testFindUrls()
     **
     ** "correctTests" is the file containing correct results of findUrls(). 
     **
-    ** "test1" -> "test3" are the test cases.
+    ** "test1" -> "test7" are the test cases.
     **
     ** "testString" is a temporary string to hold correct tests from the file.
     */
@@ -142,46 +142,61 @@ void testFindUrls()
     std::string test1 = "http://www.google.com/test/test1", 
                 test2 = "https://www.reddit.com/test", 
                 test3 = "test3",
+                test4 = "http://www.test4.com",
+                test5 = "http://www.test5.com/one/",
+                test6 = "www.example.com",
+                test7 = "www.example.com/",
                 testString;
     
     
     findUrls(test1, testUrls);
     findUrls(test2, testUrls);
+    findUrls(test3, testUrls);
+    findUrls(test4, testUrls);
+    findUrls(test5, testUrls);
+    findUrls(test6, testUrls);
+    findUrls(test7, testUrls);
     
-    correctFile.open("testing/correctFindUrls.txt");
+    correctFile.open("testing/correctFindUrls.txt");    
     
     std::cout << std::right << std::setw(18) << "EXPECTED" << std::setw(32)
               << "ACTUAL " << std::setw(28) << " STATUS\n" << std::endl;
     
     while(correctFile >> testString)
     {
-        std::cout << "Test " << testCounter << ":  " << std::endl;
-        
+        std::cout << "\nTest " << testCounter << ":  " << std::endl;
+        if(testString == "#")
+        {
+            std::cout << std::right << std::setw(76) << "PASS" << std::endl;
+            testCounter++;
+            continue;
+        }
         if(testString == testUrls.front().hostName)
         { 
-            std::cout << "          " << std::left << std::setw(33) 
+            std::cout << "           " << std::left << std::setw(33) 
                       << testString << std::setw(28) 
                       << testUrls.front().hostName << "PASS" << std::endl;
             correctFile >> testString;
 
             if(testString == testUrls.front().subDirectory)
-                std::cout << "          " << std::left << std::setw(33) 
-                      << testString << std::setw(28) 
-                      << testUrls.front().hostName << "PASS" << std::endl;
+                std::cout << "           " << std::left << std::setw(33) 
+                          << testString << std::setw(28) 
+                          << testUrls.front().subDirectory << "PASS"
+                          << std::endl;
             else
-                std::cout << "          " << std::left << std::setw(33) 
+                std::cout << "           " << std::left << std::setw(33) 
                       << testString << std::setw(28) 
-                      << testUrls.front().hostName << "PASS" << std::endl;
+                      << testUrls.front().subDirectory << "FAIL" << std::endl;
         }
         else
         {
-            std::cout << "          " << std::left << std::setw(33) << testString 
-                      << std::setw(28) << testUrls.front().hostName << "FAIL" 
-                      << std::endl;
+            std::cout << "           " << std::left << std::setw(33) 
+                      << testString << std::setw(28) 
+                      << testUrls.front().hostName << "FAIL" << std::endl;
             correctFile >> testString;
-            std::cout << "          " << std::left << std::setw(33) << testString 
-                      << std::setw(28) << testUrls.front().hostName << "FAIL" 
-                      << std::endl;
+            std::cout << "           " << std::left << std::setw(33) 
+                      << testString << std::setw(28) 
+                      << testUrls.front().subDirectory << "FAIL" << std::endl;
         }
         testUrls.pop();
         testCounter++;
