@@ -37,6 +37,8 @@ struct url
 {
     std::string hostName, subDirectory;
     int searchDepth;
+    
+    url() {}
         
     url(std::string h, std::string s, int d) : hostName(h), subDirectory(s),
         searchDepth(d) {}	  
@@ -44,7 +46,7 @@ struct url
 
 void printOptions();
 void findEmails(std::string &getResponse, std::fstream &outputFile);
-void findUrls(std::string &getResponse, std::queue<url> &urls);
+void findUrls(std::string &getResponse, std::deque<url> &urls);
 int connect(std::string hostName);
 void disconnect(int socketfd);
 std::string obtainGetResponse(std::string url, int socketfd);

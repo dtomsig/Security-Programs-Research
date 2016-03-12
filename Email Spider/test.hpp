@@ -125,9 +125,9 @@ void testFindUrls()
     /*
     ** "testCounter" counts the test number for displaying the test number. 
     **
-    ** "testUrls" is the url queue used for testing.
+    ** "testUrls" is the url deque used for testing.
     **
-    ** "correctUrl" is the url queue containing test results of findUrls().
+    ** "correctUrl" is the url deque containing test results of findUrls().
     **
     ** "correctTests" is the file containing correct results of findUrls(). 
     **
@@ -136,7 +136,7 @@ void testFindUrls()
     ** "testString" is a temporary string to hold correct tests from the file.
     */
     int testCounter = 1;
-    std::queue<url> testUrls, correctUrls;
+    std::deque<url> testUrls, correctUrls;
     std::fstream correctFile;
     std::string test1 = "http://www.google.com/test/test1", 
                 test2 = "https://www.reddit.com/test", 
@@ -145,6 +145,7 @@ void testFindUrls()
                 test5 = "http://www.test5.com/one/",
                 test6 = "www.example.com",
                 test7 = "www.example.com/",
+                test8 = "http://fonts.googleapis.com/css?family=Fenix",
                 testString;
     
     
@@ -155,6 +156,7 @@ void testFindUrls()
     findUrls(test5, testUrls);
     findUrls(test6, testUrls);
     findUrls(test7, testUrls);
+    findUrls(test8, testUrls);
     
     correctFile.open("testing/correctFindUrls.txt");    
     
@@ -166,19 +168,19 @@ void testFindUrls()
         std::cout << "\nTest " << testCounter << ":  " << std::endl;
         if(testString == "#")
         {
-            std::cout << std::right << std::setw(76) << "PASS" << std::endl;
+            std::cout << std::right << std::setw(75) << "PASS" << std::endl;
             testCounter++;
             continue;
         }
         if(testString == testUrls.front().hostName)
         { 
-            std::cout << "           " << std::left << std::setw(33) 
+            std::cout << "          " << std::left << std::setw(33) 
                       << testString << std::setw(28) 
                       << testUrls.front().hostName << "PASS" << std::endl;
             correctFile >> testString;
 
             if(testString == testUrls.front().subDirectory)
-                std::cout << "           " << std::left << std::setw(33) 
+                std::cout << "          " << std::left << std::setw(33) 
                           << testString << std::setw(28) 
                           << testUrls.front().subDirectory << "PASS"
                           << std::endl;
@@ -189,15 +191,15 @@ void testFindUrls()
         }
         else
         {
-            std::cout << "           " << std::left << std::setw(33) 
+            std::cout << "          " << std::left << std::setw(33) 
                       << testString << std::setw(28) 
                       << testUrls.front().hostName << "FAIL" << std::endl;
             correctFile >> testString;
-            std::cout << "           " << std::left << std::setw(33) 
+            std::cout << "          " << std::left << std::setw(33) 
                       << testString << std::setw(28) 
                       << testUrls.front().subDirectory << "FAIL" << std::endl;
         }
-        testUrls.pop();
+        testUrls.pop_front();
         testCounter++;
     }
 }
