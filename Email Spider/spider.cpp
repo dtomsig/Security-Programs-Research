@@ -463,8 +463,7 @@ void spider(url &initialUrl, std::fstream &outputFile, int maxSearchDepth,
                 while(urls[threadCounter].searchDepth == maxSearchDepth)
                 {
                     std::cout << "Max depth reached!!!" << std::endl;
-                    urls.pop_front();
-                     
+                    urls.erase(urls.begin() + threadCounter);
                 }
                 std::cout << "size is " << urls.size() << std::endl;
                 getRequestThreads.emplace_back(std::thread(
@@ -566,8 +565,17 @@ int main(int argc, char **argv)
         switch (c) 
         {
             case('h'):
-                hostName = static_cast<std::string>(optarg).substr(0, static_cast<std::string>
+                hostName = static_cast<std::string>(optarg).substr(0, 
+                                                   static_cast<std::string>
                                                    (optarg).find("/"));
+                subDirectory = static_cast<std::string>(optarg).
+                                                       substr(std::min(static_cast
+                                                       <std::string>
+                                                       (optarg).find("/"), 
+                                       static_cast<std::string>(optarg).size()), 
+                                       static_cast<std::string>(optarg).size());
+                if(subDirectory.size() == 0)
+                    subDirectory = "/";
                 std::cout << "Hostname is" << hostName;
                 displayHelpFlag = 0;
                 break;
