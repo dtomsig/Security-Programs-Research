@@ -28,28 +28,50 @@
 /*
 ** GLOBAL VARIABLES:
 ** 
-** "url" represents an entire page that will be used for spidering. It contains
-** a hostname (i.e. www.google.com) and a subdirectory/file within that larger 
-** page.
+** "st_subDirectory" represents an entire subdirectory that will be used for
+** spidering. No hostname is associated with the subdirectory structure.
+** 
+** "st_url" represents an entire page that will be used for spidering. It 
+** contains a hostname (i.e. www.google.com) and a subdirectory/file within that 
+** larger page.
 */
 
-struct url 
+struct st_subdirectory
 {
-    std::string hostName, subDirectory;
+    std::string subdirectory;
     int searchDepth;
     
-    url() {}
+    st_subdirectory() {}
+    
+    st_subdirectory(std::string s, int sd) : subdirectory(s), searchDepth(sd) {}
+};
+
+struct st_url 
+{
+    std::string hostName, subdirectory;
+    int searchDepth;
+    
+    st_url() {}
         
-    url(std::string h, std::string s, int d) : hostName(h), subDirectory(s),
-        searchDepth(d) {}	  
+    st_url(std::string h, std::string s, int d) : hostName(h), subdirectory(s),
+        searchDepth(d) {}	 
 };
 
 void printOptions();
 void findEmails(std::string &getResponse, std::fstream &outputFile);
-void findUrls(std::string &getResponse, std::deque<url> &urls);
+void findSubdirectories(std::string &getResponse, 
+                        std::map<std::string, int> &visitedDirectories,
+                        std::deque<st_subdirectory> &subdirectories);
+void findUrls(std::string &getResponse, std::deque<st_url> &urls);
 int connect(std::string hostName);
 void disconnect(int socketfd);
-std::string obtainGetResponse(std::string url, int socketfd);
+std::string obtainGetResponse(st_subdirectory &subdirectory, 
+                              std::string &hostName, int socketfd);
 void spider(std::string hostName, std::ifstream &outputFile, int searchDepth);
+void threadGetRequestsHelper(std::fstream &outputFile, 
+                             std::map<std::string, int> &visitedDirectories,
+                             std::deque<st_subdirectory> &subdirectories,
+                             st_subdirectory &targetDirectory,
+                             std::string &hostName);
 
 #endif

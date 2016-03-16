@@ -1,20 +1,21 @@
 /*******************************************************************************
 * FILE: spider.cpp                                                             *
-*                                                                              *                                                                                     *
+*                                                                              *
 * DESCRIPTION: spider.cpp is where the main method for emailSpider.exe lives.  *
 * It performs  the core operation of spidering webpages for emails.            *
 *                                                                              *
 * OUTPUT FILE: emailSpider.exe                                                 *
 *******************************************************************************/
 
+#include <map>
 #include "spider.hpp"
 #include "test.hpp"
 #include <thread>
 
 /*******************************************************************************
 * FUNCTION: printOptions()                                                     *
-*                                                                              *                                                                                     *
-* DESCRIPTION: printOptions prints all of the options available to the user    *        
+*                                                                              *
+* DESCRIPTION: printOptions prints all of the options available to the user    *
 * running ./emailSpider. It is called when --help is used as an option.        *
 *                                                                              *
 * PARAMETERS: None                                                             *
@@ -103,15 +104,15 @@ void printOptions()
 
 
 /*******************************************************************************
-* FUNCTION: findEmails(std::string getResponse)                                *
-*                                                                              *                                                                                 *
+* FUNCTION: findEmails(std::string &getResponse, std::fstream &outputFile)     *
+*                                                                              *
 * DESCRIPTION: findEmails receives a raw GET response and writes the emails    *
 * directly to an output file stream.                                           *
 *                                                                              *
 * PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
 *                             be used to obtain email addresses.               *
 *                -outputFile: The ouptut file that will contain spidered email *
-*                             addresses.                                       *                                                                       *
+*                             addresses.                                       *
 *******************************************************************************/
 
 void findEmails(std::string &getResponse, std::fstream &outputFile)
@@ -131,7 +132,7 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
     std::regex_iterator<std::string::iterator> iteratorEnd;
 
     /* 
-    ** Searches through the getResponse for emails and adds them to the 
+    ** Searches through the get response for emails and adds them to the 
     ** email file. 
     */
     while(iterator != iteratorEnd) 
@@ -144,17 +145,84 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
 
 
 /*******************************************************************************
-* FUNCTION: findUrls(std::string getResponse)                                  *
-*                                                                              *                                                                                     *
+* FUNCTION: findSubdirectories(std::string &getResponse)                       *
+*                                                                              *
+* DESCRIPTION: findSubdirectories receives a raw GET response and adds the     *
+*              subdirectories found to the deque of subdirectories to parse.   *
+*                                                                              *
+* PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
+*                             be used to obtain email addresses.               *
+*        -visitedDirectories: Directories already visited not to be added.     *
+*            -subdirectories: The current subdirectories awaiting visiting.    *
+*******************************************************************************/
+
+void findSubdirectories(std::string &getResponse, 
+                        std::map<std::string, int> &visitedDirectories,
+                        std::deque<st_subdirectory> &subdirectories)
+{
+    /*
+    ** "currentDepth" holds the current depth of the struct subDirectory that 
+    ** is passed in.
+    **
+    ** "subDirectoryFormat" is a regular expression for subdirectories.
+    **
+    ** "iterator" is a regex iterator for the incoming getResponse.
+    **
+    ** "iteratorEnd" is the last location in the incoming getResponse.
+    ** 
+    ** "subdirectory" stores the true subDirectory that gets parsed from the
+    ** href.
+    */
+    
+    int currentDepth;
+    std::regex subdirectoryFormat("href=\"[\\S]*[/]*\"");
+    std::regex_iterator<std::string::iterator> iterator(getResponse.begin(), 
+                                                        getResponse.end(), 
+                                                        subdirectoryFormat);
+    std::regex_iterator<std::string::iterator> iteratorEnd;
+    std::string subdirectory;
+    
+    currentDepth = subdirectories.front().searchDepth;
+    
+    /* 
+    ** Searches through the get response for subdirectories and adds them to the 
+    ** subdirectory queue. 
+    */
+    while(iterator != iteratorEnd) 
+    {
+        subdirectory = (*iterator).str().substr((*iterator).str().find("\"") 
+                                                 + 1, 
+                                                (*iterator).str().size() - 2 - 
+                                                (*iterator).str().find("\""));
+        if(subdirectory[0] != '/')
+            subdirectory = '/' + subdirectory;
+            
+        if(!visitedDirectories.count(subdirectory))
+        {
+            subdirectories.push_back(st_subdirectory(subdirectory, 
+                                                 currentDepth + 1));
+            visitedDirectories.insert(std::pair<std::string, int>(subdirectory
+                                                                   , 1));
+                                                 
+        }
+        iterator++;
+    }
+}
+
+
+
+/*******************************************************************************
+* FUNCTION: findUrls(std::string &getResponse, std::deque<st_url> &urls)       *
+*                                                                              *
 * DESCRIPTION: findUrls receives a raw GET response and modifies a deque of    *
 * URLS to hold additional URLs for spidering purposes.                         *
 *                                                                              *
 * PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
-*                             be used to obtain email addresses.               *                                                        *
-*                      -urls: The deque of URLS that will be added to.         *               
+*                             be used to obtain email addresses.               *  
+*                      -urls: The deque of URLS that will be added to.         *
 *******************************************************************************/
 
-void findUrls(std::string &getResponse, std::deque<url> &urls)
+void findUrls(std::string &getResponse, std::deque<st_url> &urls)
 {
     /*
     ** "currentDepth" holds the current depth of the struct URL that is passed 
@@ -183,7 +251,7 @@ void findUrls(std::string &getResponse, std::deque<url> &urls)
                                                         getResponse.end(), 
                                                         urlFormat);
     std::regex_iterator<std::string::iterator> iteratorEnd;
-    std::string hostName, subDirectory = "";
+    std::string hostName, subdirectory = "";
     
     currentDepth = urls.front().searchDepth;
     
@@ -197,17 +265,17 @@ void findUrls(std::string &getResponse, std::deque<url> &urls)
         hostName = (*iterator).str().substr(posBeginningHostname, 
                                             posEndHostname - 
                                             posBeginningHostname);
-        subDirectory = (*iterator).str().substr(posEndHostname, 
+        subdirectory = (*iterator).str().substr(posEndHostname, 
                                                 - posEndHostname);
                                                     
         /* Adjustments for input that doesn't match hostname format. */                                        
-        if(subDirectory[subDirectory.size() - 1] == '/')
-            subDirectory.pop_back();
-        if(subDirectory == "")
-            subDirectory = "/";
+        if(subdirectory[subdirectory.size() - 1] == '/')
+            subdirectory.pop_back();
+        if(subdirectory == "")
+            subdirectory = "/";
         if(hostName[0] != 'w' && hostName[1] != 'w' && hostName[2] !='w')
             hostName = "www." + hostName;
-        urls.push_back(url(hostName, subDirectory, currentDepth + 1));
+        urls.push_back(st_url(hostName, subdirectory, currentDepth + 1));
         iterator++;
     }    
 }
@@ -216,7 +284,7 @@ void findUrls(std::string &getResponse, std::deque<url> &urls)
 
 /*******************************************************************************
 * FUNCTION: connect(std::string hostName)                                      *
-*                                                                              *                                                                                     *
+*                                                                              *
 * DESCRIPTION: connect attempts to extablish a tcp connection with the         *
 * top-level hostname. If it is unsuccessful, -1 is returned. Otherwise, the    *
 * file descriptor is returned after a connection.                              *
@@ -244,11 +312,11 @@ int connect(std::string hostName)
     int statusAddr, statusSocketConnect, socketfd;
     struct addrinfo host_info;
     struct addrinfo *host_info_list;
+    
     /* 
     ** These commands are necessary to fill the address info structures with 
     ** information associated with the particular webpage.
     */
-
     hostName.erase(0,4);
     memset(&host_info, 0, sizeof(host_info));
     host_info.ai_family = AF_INET;
@@ -296,7 +364,7 @@ int connect(std::string hostName)
 
 /*******************************************************************************
 * FUNCTION: disconnect(int socketfd)                                           *
-*                                                                              *                                                                                     *
+*                                                                              *
 * DESCRIPTION: disconnect closes the socket                                    *
 *                                                                              *
 * PARAMETERS:      -socketfd: The file descriptor of the socket that will be   *
@@ -312,16 +380,19 @@ void disconnect(int socketfd)
 
 
 /*******************************************************************************
-* FUNCTION: obtainGetResponse(std::string hostName)                            *
-*                                                                              *                                                                                     *
+* FUNCTION: obtainGetResponse(st_subdirectory &subdirectory,                   *
+*                             std::string &hostName, int socketfd)             *
+*                                                                              *
 * DESCRIPTION: obtainGetResponse attempts to send a GET request to the server  *
 *              and receive a response.                                         *
 *                                                                              *
-* PARAMETERS:      -url: The particular struct url that will be spidered.      *
+* PARAMETERS:  -subDirectory: The struct subdirectory that will be spidered.   *
+*                  -hostName: The hostname that is currently connected.        *
 *                  -socketfd: The handle to the current socket file descriptor.*
 *******************************************************************************/
 
-std::string obtainGetResponse(url &url, int socketfd)
+std::string obtainGetResponse(st_subdirectory &subdirectory, 
+                              std::string &hostName, int socketfd)
 {
     /*
     ** "incoming_data_buffer" is an array that stores the response from the 
@@ -340,9 +411,9 @@ std::string obtainGetResponse(url &url, int socketfd)
     char incoming_data_buffer[1448];
     int len;
     ssize_t bytes_sent, bytes_received;
-    std::string pageSource, msg = ("GET " + url.subDirectory  
-                                    + " HTTP/1.0\r\nHost:" +
-                                    url.hostName + "\r\n\r\n");
+    std::string pageSource, msg = ("GET " + subdirectory.subdirectory  
+                                    + " HTTP/1.0\r\nHost: " +
+                                    hostName + "\r\n\r\n");
     std::cout << msg;                
     len = strlen(msg.c_str());
     bytes_sent = send(socketfd, msg.c_str(), len, 0);	
@@ -356,7 +427,6 @@ std::string obtainGetResponse(url &url, int socketfd)
         incoming_data_buffer[bytes_received] = '\0';
         pageSource += incoming_data_buffer;      
     }
-        
     return pageSource;
 } 
 
@@ -364,38 +434,46 @@ std::string obtainGetResponse(url &url, int socketfd)
 
 /*******************************************************************************
 * FUNCTION: threadGetRequestsHelper(int socketfd)                              *
-*                                                                              *                                                                                     *
+*                                                                              *
 * DESCRIPTION: threadGetRequestsHelper is a helper function for the spidering  *
 *              function.                                                       *
 *                                                                              *
-* PARAMETERS:      -hostName: The hostName that the thread will connect to.    *
+* PARAMETERS-                                                                  *
 *                -outPutFile: The output file stream that will contain the     *
 *                             the spidered  email addresses.                   *
-*              -specificUrl:  The particular url to bespidered.                *
-*                       urls: The url deque to add spidered email addresses.   *
+*        -visitedDirectories: The list of visited directories.                 *
+*            -subDirectories: The st_subDirectory deque to add spidered        *
+*                             email addresses.                                 *
+*                  -hostName: The hostName associated with the socket file     *
+*                             descriptor.                                      *
 *******************************************************************************/
 
-void threadGetRequestsHelper(std::string hostName, std::fstream &outputFile,
-                             url &specificUrl, std::deque<url> &urls)
+void threadGetRequestsHelper(std::fstream &outputFile, 
+                             std::map<std::string, int> &visitedDirectories,
+                             std::deque<st_subdirectory> &subdirectories,
+                             st_subdirectory &targetDirectory,
+                             std::string &hostName)
 {
-    /* 
+    /*
     ** "currentSocketfd" represents the current socket file descriptor that the
     ** program is connected to.
     **
     ** "getResponse" stores the get response from the target server.
     */     
-    int currentSocketfd;
+    int currentSocketfd = connect(hostName);
     std::string getResponse;
-    currentSocketfd = connect(hostName);
-    if(currentSocketfd == -1)
-        return;
-    getResponse = obtainGetResponse(specificUrl, currentSocketfd);
+    getResponse = obtainGetResponse(targetDirectory, hostName, currentSocketfd);
     std::thread callFindEmails (findEmails, std::ref(getResponse), 
                                 std::ref(outputFile));
-    std::thread callFindUrls (findUrls, std::ref(getResponse), std::ref(urls));
-    
+    std::thread callFindSubdirectories (findSubdirectories,
+                                        std::ref(getResponse),
+                                        std::ref(visitedDirectories),
+                                        std::ref(subdirectories));
+   // std::thread callFindUrls (findExternalUrls, std::ref(getResponse), 
+    //                          std::ref(urls));
     callFindEmails.join();
-    callFindUrls.join();        
+    //callUrls.join();        
+    callFindSubdirectories.join();
     disconnect(currentSocketfd);
     return;
 }
@@ -404,43 +482,54 @@ void threadGetRequestsHelper(std::string hostName, std::fstream &outputFile,
 
 /*******************************************************************************
 * FUNCTION: spider(std::string hostName, std::fstream &outputFile )            *
-*                                                                              *                                                                                     *
+*                                                                              *
 * DESCRIPTION: This function controls the logical level of spidering.          *
 *                                                                              *
 * PARAMETERS:     initialUrl: The initail url that will be connected to.       *
 *                -outPutFile: The output file stream that will contain the     *
 *                             the spidered  email addresses.                   *
 *            -maxSearchDepth: The highest search depth that will be spidered.  *
-*                -numThreads: The number of threads the program will use.      *                                        
+*                -numThreads: The number of threads the program will use.      *
 *******************************************************************************/
 
-void spider(url &initialUrl, std::fstream &outputFile, int maxSearchDepth,
+void spider(st_url &initialUrl, std::fstream &outputFile, int maxSearchDepth,
             int numThreads)
 {   
     /* 
     ** "currentSocketfd" represents the current socket file descriptor that the
     ** program is connected to. 
     ** 
-    ** "threadCounter" counts the number of threads that are currently active.
+    ** "subdirectories" represents the current list of remaining subdirectories.
     **
-    ** "urls" represents all of the urls that remain to be spidered by the 
-    ** program. It is a deque of the url structure that was declared before.
+    ** "visitedDirectories" represents the directories already visited.
+    **
+    ** "threadCounter" counts the number of threads that are currently active.
     **
     ** "currentHost" stores the current host that is connected to. 
     **
     ** "getResponse" represents the GET response to be parsed.
     ** 
+    ** "urls" represents all of the urls that remain to be spidered by the 
+    ** program. It is a deque of the url structure that was declared before.
+    **
     ** "getRequestThreads" represents the threads for get requests according
     ** to the number that the user reqeusted. 
     */
     int currentSocketfd, threadCounter;
-    std::deque<url> urls;
+    std::deque<st_subdirectory> subdirectories;
+    std::map<std::string, int> visitedDirectories;
     std::string currentHost, getResponse;
+    std::vector<st_url> urls;
     std::vector<std::thread> getRequestThreads;
-    getRequestThreads.reserve(numThreads);
-        
+    
+    /* Initializiation commands as the spidering process begins. */
+    currentHost = initialUrl.hostName;
+    getRequestThreads.reserve(numThreads);    
+    subdirectories.push_back(st_subdirectory(initialUrl.subdirectory, 
+                             initialUrl.searchDepth));
+
 	/* Attempts initial connection to determine if hostname is valid. */
-    if((currentSocketfd = connect(initialUrl.hostName)) && 
+    if((currentSocketfd = connect(currentHost)) && 
                           currentSocketfd == -1)
     {
 	    std::cout << termcolor::reset << termcolor::red 
@@ -449,39 +538,36 @@ void spider(url &initialUrl, std::fstream &outputFile, int maxSearchDepth,
         disconnect(currentSocketfd);
 	}
 	else
-	{
-        urls.push_back(initialUrl);
-        currentHost = urls.front().hostName;
-                
+	{    
+        disconnect(currentSocketfd);            
         /* Main spidering logic controller is here. */
-        while(!urls.empty())
+        while(!subdirectories.empty())
         {   
+            std::cout << "size: " << subdirectories.size() << std::endl;
             /* Spawns threads that won't exceed the number of max threads. */ 
-            for(threadCounter = 0; threadCounter < numThreads && threadCounter <
-                urls.size(); threadCounter++)
+            for(threadCounter = 0; threadCounter < numThreads 
+                && threadCounter < subdirectories.size(); threadCounter++)
             {    
-                while(urls[threadCounter].searchDepth == maxSearchDepth)
-                {
-                    std::cout << "Max depth reached!!!" << std::endl;
-                    urls.erase(urls.begin() + threadCounter);
-                }
-                std::cout << "size is " << urls.size() << std::endl;
+                visitedDirectories.insert(std::pair<std::string, int>
+                                         (subdirectories[threadCounter]
+                                         .subdirectory, 1));
                 getRequestThreads.emplace_back(std::thread(
-                                            threadGetRequestsHelper, 
-                                            urls[threadCounter].hostName,
-                                            std::ref(outputFile),
-                                            std::ref(urls[threadCounter]), 
-                                            std::ref(urls)));
-                std::cout << "Added " << urls[threadCounter].hostName << std::endl;
+                                               threadGetRequestsHelper,
+                                               std::ref(outputFile),
+                                               std::ref(visitedDirectories),
+                                               std::ref(subdirectories),
+                                               std::ref(subdirectories
+                                                        [threadCounter]),
+                                               std::ref(currentHost)));
             }
             
             /* Rejoins the threads and frees memory used for threads. */
             for(auto &t: getRequestThreads)
             {
                 t.join();
-                urls.pop_front();
+                subdirectories.pop_front();
             }
-            
+
             /* Erases the threads from the vector at the end of execution. */
             getRequestThreads.erase(getRequestThreads.begin(), 
                                         getRequestThreads.begin() 
@@ -509,8 +595,6 @@ int main(int argc, char **argv)
     ** "testingModeFlag" represents whether or not the tests will be run in the 
     **  program.
     **
-    ** "initialUrl" represents the initial url that will be spidered.
-    **
     ** "outputFile" refers to the output filestream associated with 
     **  outputFileName
     **
@@ -521,12 +605,15 @@ int main(int argc, char **argv)
     **  spidered email addresses. 
     **
     ** "subDirectory" represents the subdomain that will be spidered.
+    **
+    ** "initialUrl" represents the initial url that will be spidered.
     */ 
     int c, displayHelpFlag, numThreads, searchDepth, testingModeFlag;
     std::fstream outputFile;
-    std::string hostName, outputFileName, subDirectory;
-    url initialUrl;
+    std::string hostName, outputFileName, subdirectory;
+    st_url initialUrl;
 
+    
     /* 
     ** Default options are set here. These can change based upon what the user
     ** enters in as arguments. 
@@ -535,7 +622,7 @@ int main(int argc, char **argv)
     displayHelpFlag = 0; 
     outputFileName = "emails.txt";
     searchDepth = 3;
-    subDirectory = "/";
+    subdirectory = "/";
     testingModeFlag = 0;
     numThreads = 5;
 
@@ -568,15 +655,14 @@ int main(int argc, char **argv)
                 hostName = static_cast<std::string>(optarg).substr(0, 
                                                    static_cast<std::string>
                                                    (optarg).find("/"));
-                subDirectory = static_cast<std::string>(optarg).
-                                                       substr(std::min(static_cast
-                                                       <std::string>
+                subdirectory = static_cast<std::string>(optarg).
+                                                       substr(std::min(
+                                                       static_cast<std::string>
                                                        (optarg).find("/"), 
                                        static_cast<std::string>(optarg).size()), 
                                        static_cast<std::string>(optarg).size());
-                if(subDirectory.size() == 0)
-                    subDirectory = "/";
-                std::cout << "Hostname is" << hostName;
+                if(subdirectory.size() == 0)
+                    subdirectory = "/";
                 displayHelpFlag = 0;
                 break;
                 
@@ -601,7 +687,7 @@ int main(int argc, char **argv)
     }
     
     initialUrl.hostName = hostName;
-    initialUrl.subDirectory = subDirectory;
+    initialUrl.subdirectory = subdirectory;
     initialUrl.searchDepth = 0;
     
     /* 
