@@ -152,11 +152,13 @@ void findEmails(std::string &getResponse, std::fstream &outputFile)
 *                                                                              *
 * PARAMETERS:   -getResponse: The GET response from the HTTP server that will  *
 *                             be used to obtain email addresses.               *
+*                  -hostName: The current hostName that is being spidered.     *
 *        -visitedDirectories: Directories already visited not to be added.     *
 *            -subdirectories: The current subdirectories awaiting visiting.    *
 *******************************************************************************/
 
-void findSubdirectories(std::string &getResponse, 
+void findSubdirectories(std::string &getResponse,
+                        std::string &hostName,
                         std::map<std::string, int> &visitedDirectories,
                         std::deque<st_subdirectory> &subdirectories)
 {
@@ -194,11 +196,27 @@ void findSubdirectories(std::string &getResponse,
                                                  + 1, 
                                                 (*iterator).str().size() - 2 - 
                                                 (*iterator).str().find("\""));
+        if(subdirectory.substr(0,4) == "http")
+        {
+            if(subdirectory.find(hostName) == std::string::npos)
+            {
+                iterator++;
+                continue;
+            }
+            std::cout << "original sub" << subdirectory << std::endl;
+            subdirectory = subdirectory.substr(std::min(subdirectory.find("/", 
+                                                                          10), 
+                                                        subdirectory.size()), 
+                                               std::min(subdirectory.size() - 
+                                               subdirectory.find("/", 10), 
+                                               subdirectory.size()));
+        }
         if(subdirectory[0] != '/')
             subdirectory = '/' + subdirectory;
             
         if(!visitedDirectories.count(subdirectory))
         {
+            std::cout << "added: " << subdirectory << std::endl;
             subdirectories.push_back(st_subdirectory(subdirectory, 
                                                  currentDepth + 1));
             visitedDirectories.insert(std::pair<std::string, int>(subdirectory
@@ -207,6 +225,7 @@ void findSubdirectories(std::string &getResponse,
         }
         iterator++;
     }
+    return;
 }
 
 
@@ -467,6 +486,7 @@ void threadGetRequestsHelper(std::fstream &outputFile,
                                 std::ref(outputFile));
     std::thread callFindSubdirectories (findSubdirectories,
                                         std::ref(getResponse),
+                                        std::ref(hostName),
                                         std::ref(visitedDirectories),
                                         std::ref(subdirectories));
    // std::thread callFindUrls (findExternalUrls, std::ref(getResponse), 
@@ -704,6 +724,6 @@ int main(int argc, char **argv)
         spider(initialUrl, outputFile, searchDepth, numThreads);
     }
     
-	outputFile.close();
+    outputFile.close();
     return 0;
 }

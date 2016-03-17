@@ -60,6 +60,7 @@ struct st_url
 void printOptions();
 void findEmails(std::string &getResponse, std::fstream &outputFile);
 void findSubdirectories(std::string &getResponse, 
+                        std::string &hostName,
                         std::map<std::string, int> &visitedDirectories,
                         std::deque<st_subdirectory> &subdirectories);
 void findUrls(std::string &getResponse, std::deque<st_url> &urls);

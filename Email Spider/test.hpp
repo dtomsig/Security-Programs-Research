@@ -130,8 +130,11 @@ void testFindSubdirectories()
     ** "correctUrl" is the url deque containing test results of findUrls().
     **
     ** "correctTests" is the file containing correct results of findUrls(). 
+    ** 
+    ** "hostName" is the hostname without www. in order to call 
+    ** findSubdirectories.
     **
-    ** "test1" -> "test7" are the test cases.
+    ** "test1" -> "test8" are the test cases.
     **
     ** "testString" is a temporary string to hold correct tests from the file.
     */
@@ -139,21 +142,28 @@ void testFindSubdirectories()
     std::map<std::string, int> visitedDirectories;
     std::deque<st_subdirectory> testSubdirectories, correctSubdirectories;
     std::fstream correctFile;
+    std::string hostName = "reddit.com";
     std::string test1 = "href=\"/feed/history/search_history\"",
-                test2 = "android-app://com.google.android.youtube/http/"
+                test2 = "android-app://com.reddit.android.youtube/http/"
                         "www.youtube.com/watch?v=DAhtOhaQvk4",
                 test3 = "<li><a href=\"/search.aspx?browse=133\"",
                 test4 = "ybez News\" href=\"/latestNews.rss\"",
                 test5 = "Items\" href=\"/latestAdditions_1.rss\" /",
                 test6 = "href=\"index.html\"",
+                test7 = " href=\"http://www.zybez.net/news/825/patch_notes___ju"
+                        "ly_19_2010/\" /><link rel=\"",
+                test8 = "href=\"/img/test.png\"",
                 testString;
                 
-    findSubdirectories(test1, visitedDirectories, testSubdirectories);
-    findSubdirectories(test2, visitedDirectories, testSubdirectories);
-    findSubdirectories(test3, visitedDirectories, testSubdirectories);
-    findSubdirectories(test4, visitedDirectories, testSubdirectories);
-    findSubdirectories(test5, visitedDirectories, testSubdirectories);
-    findSubdirectories(test6, visitedDirectories, testSubdirectories);
+    findSubdirectories(test1, hostName, visitedDirectories, testSubdirectories);
+    findSubdirectories(test2, hostName, visitedDirectories, testSubdirectories);
+    findSubdirectories(test3, hostName, visitedDirectories, testSubdirectories);
+    findSubdirectories(test4, hostName, visitedDirectories, testSubdirectories);
+    findSubdirectories(test5, hostName, visitedDirectories, testSubdirectories);
+    findSubdirectories(test6, hostName, visitedDirectories, testSubdirectories);
+    findSubdirectories(test7, hostName, visitedDirectories, testSubdirectories);
+    findSubdirectories(test8, hostName, visitedDirectories, testSubdirectories);
+
 
     correctFile.open("testing/correctFindSubdirectories.txt");  
     
@@ -165,7 +175,7 @@ void testFindSubdirectories()
         std::cout << "\nTest " << testCounter << ":  " << std::endl;
         if(testString == "#")
         {
-            std::cout << std::right << std::setw(75) << "PASS" << std::endl;
+            std::cout << std::right << std::setw(75) << "UNCT" << std::endl;
             testCounter++;
             continue;
         }
