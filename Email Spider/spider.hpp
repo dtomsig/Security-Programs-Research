@@ -39,40 +39,42 @@
 struct st_subdirectory
 {
     std::string subdirectory;
-    int searchDepth;
+    int search_depth;
     
     st_subdirectory() {}
     
-    st_subdirectory(std::string s, int sd) : subdirectory(s), searchDepth(sd) {}
+    st_subdirectory(std::string s, int sd) : subdirectory(s), search_depth(sd)
+    {}
 };
 
 struct st_url 
 {
-    std::string hostName, subdirectory;
-    int searchDepth;
+    std::string host_name, subdirectory;
+    int search_depth;
     
     st_url() {}
         
-    st_url(std::string h, std::string s, int d) : hostName(h), subdirectory(s),
-        searchDepth(d) {}	 
+    st_url(std::string h, std::string s, int d) : host_name(h), subdirectory(s),
+        search_depth(d) {}	 
 };
 
-void printOptions();
-void findEmails(std::string &getResponse, std::fstream &outputFile);
-void findSubdirectories(std::string &getResponse, 
-                        std::string &hostName,
-                        std::map<std::string, int> &visitedDirectories,
+void print_options();
+void find_emails(std::string &get_response, std::fstream &output_file);
+void find_subdirectories(std::string &get_response, 
+                        std::string &host_name,
+                        std::map<std::string, int> &visited_directories,
                         std::deque<st_subdirectory> &subdirectories);
-void findUrls(std::string &getResponse, std::deque<st_url> &urls);
-int connect(std::string hostName);
-void disconnect(int socketfd);
-std::string obtainGetResponse(st_subdirectory &subdirectory, 
-                              std::string &hostName, int socketfd);
-void spider(std::string hostName, std::ifstream &outputFile, int searchDepth);
-void threadGetRequestsHelper(std::fstream &outputFile, 
-                             std::map<std::string, int> &visitedDirectories,
-                             std::deque<st_subdirectory> &subdirectories,
-                             st_subdirectory &targetDirectory,
-                             std::string &hostName);
+void find_urls(std::string &get_response, std::deque<st_url> &urls);
+int connect(std::string host_name);
+void disconnect(int socket_fd);
+std::string obtain_get_repsonse(st_subdirectory &subdirectory, 
+                                std::string &host_name, int socket_fd);
+void spider(std::string host_name, std::ifstream &output_file, 
+            int search_depth);
+void thread_get_requests_helper(std::fstream &output_file, 
+                               std::map<std::string, int> &visited_directories,
+                               std::deque<st_subdirectory> &subdirectories,
+                               st_subdirectory &target_directory,
+                               std::string &host_name);
 
 #endif
