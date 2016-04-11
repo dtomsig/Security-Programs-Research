@@ -13,7 +13,7 @@ TARGET                       =    boofuzz.sessions.Target(CONNECTION)
 SESSION.add_target(TARGET)
 
 boofuzz.s_initialize("trunc")
-boofuzz.s_string("TRUNC")
+boofuzz.s_string("TRUN")
 boofuzz.s_delim(" ")
 boofuzz.s_string("anonymous")
 boofuzz.s_static("\r\n")    

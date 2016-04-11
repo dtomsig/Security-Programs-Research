@@ -346,7 +346,7 @@ void disconnect(int socket_fd)
 
 /*******************************************************************************
 * FUNCTION: obtain_get_response(st_subdirectory &subdirectory,                 *
-*                             std::string &host_name, int socket_fd)           *
+*                               std::string &host_name, int socket_fd)         *
 *                                                                              *
 * DESCRIPTION: obtain_get_response attempts to send a GET request to the server*
 *              and receive a response.                                         *
@@ -385,7 +385,13 @@ std::string obtain_get_response(st_subdirectory &subdirectory,
 
 
 /*******************************************************************************
-* FUNCTION: thread_get_requests_helper(int socket_fd)                          *
+* FUNCTION: thread_get_requests_helper(std::fstream &output_file,              *
+*                                      std::map<std::string, int>              *
+*                                                   &visited_directories,      *
+*                                      std::deque<st_subdirectory>             *
+*                                                   &subdirectories,           *
+*                                      st_subdirectory &target_directory,      *
+*                                      std::string &host_name)                 *
 *                                                                              *
 * DESCRIPTION: thread_get_requests_helper is a helper function for the         *
 *              spidering function.                                             *
