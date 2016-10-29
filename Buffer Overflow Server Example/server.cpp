@@ -16,7 +16,7 @@ void readData(void *socket_desc)
     recv(*(static_cast<int*>(socket_desc)), dataBuffer, 700, 0);
     std::cout << dataBuffer << std::endl;
 }
-
+    
 void *connectionHandlerer(void *socket_desc)
 {
     readData(socket_desc);

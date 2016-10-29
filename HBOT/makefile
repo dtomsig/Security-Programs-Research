@@ -7,10 +7,10 @@ VPATH = Z:/root/Desktop/Programming/C++/Hearthstone\ Bot
 
 all: bot
 
-bot: gameFile inject client/bot.cpp
+bot: game_file inject client/bot.cpp
 	${CXX} ${CXXFLAGS} ${OBJECTS} ${DLLS} client/bot.cpp -o hBot
 
-gameFile: game/game.h game/game.cpp
+game_file: game/game.h game/game.cpp
 	$(CXX) -c game/game.cpp -o game/game.o
 
 inject: dll/inject.hpp dll/inject.cpp

@@ -1,5 +1,8 @@
+#!/usr/bin/env python3
+
 import boofuzz
 import socket
+
 
 TARGET_IP                    =    "192.168.1.62"
 TARGET_PORT                  =    9999

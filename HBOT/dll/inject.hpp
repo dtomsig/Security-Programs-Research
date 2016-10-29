@@ -1,7 +1,7 @@
 /*******************************************************************************
-* FILE: inject.h                                                               *
+* FILE: inject.hpp                                                             *
 *                                                                              *
-* DESCRIPTION: inject.cpp contains methods for interacting with Hearthstone.   *                                                     *
+* DESCRIPTION: inject.hpp contains methods for interacting with Hearthstone.   *                                                     *
 *                                                                              *
 * OUTPUT FILE: inject.dll                                                      *
 *******************************************************************************/
@@ -24,6 +24,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-void INJECT_DLL openRankedGame();
-void INJECT_DLL playCard(int c);
+void INJECT_DLL open_ranked_game();
+void INJECT_DLL play_card(int c);
 #endif

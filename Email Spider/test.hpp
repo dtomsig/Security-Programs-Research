@@ -34,11 +34,12 @@ void test_find_emails()
                 test3 = "capachone@gmail.com",
                 test4 = "a@wwwwww.0000",
                 test5 = "chapo.guzman@root.de",
+                test6 = "<a href=\"mailto:aakinola@pvcc.edu\">",
                 test_string,
                 correct_string;   
                 
-    test_file.open("testing/testFindEmails.txt", std::ios::in | std::ios::out);
-    correct_file.open("testing/correctFindEmails.txt");
+    test_file.open("testing/test_find_emails.txt", std::ios::in | std::ios::out);
+    correct_file.open("testing/correct_find_emails.txt");
   
     find_emails(test1, test_file);
     test_file << "#\n";
@@ -50,7 +51,9 @@ void test_find_emails()
     test_file << "#\n";
     find_emails(test5, test_file);
     test_file << "#\n";
-    num_tests = 5;
+    find_emails(test6, test_file);
+    test_file << "#\n";
+    num_tests = 6;
     
     test_file.clear();
     test_file.seekg(0, std::ios::beg);
@@ -62,25 +65,42 @@ void test_find_emails()
     {
         test_file >> test_string;
         correct_file >> correct_string;
-        
         std::cout << "Test " << test_counter << ":  " << std::endl;
 
-        while(test_string != "#" || correct_string != "#")
-        {                
-            if(test_string != correct_string)
-                std::cout << "          " << std::left << std::setw(33)
-                          << correct_string << std::setw(28) << test_string
-                          << "FAIL" << std::endl;
-            else
-                std::cout << "          " << std::left << std::setw(33) 
-                          << correct_string << std::setw(28) << test_string
-                          << "PASS" << std::endl;
-                          
-            if(test_string != "#")
-                test_file >> test_string;
+        
+        if(test_string == "#" && correct_string == "#")
+        {
+            std::cout << "          " << std::left << std::setw(33) 
+                      << "N/A" << std::setw(28) << "N/A"
+                      << "PASS" << std::endl;
+        }
+        else
+        {
+            while(test_string != "#" || correct_string != "#")
+            {                
+                if(test_string != correct_string)
+                {
+                    if(test_string == "#")
+                        std::cout << "          " << std::left << std::setw(33)
+                                  << correct_string << std::setw(28) 
+                                  << "N/A" << "FAIL" << std::endl;
+                    
+                    else
+                        std::cout << "          " << std::left << std::setw(33)
+                                  << correct_string << std::setw(28) 
+                                  << test_string<< "FAIL" << std::endl;
+                }
+                else
+                    std::cout << "          " << std::left << std::setw(33) 
+                              << correct_string << std::setw(28) << test_string
+                              << "PASS" << std::endl;
+                                                        
+                if(test_string != "#")
+                    test_file >> test_string;
             
-            if(correct_string != "#")
-                correct_file >> correct_string;
+                if(correct_string != "#")
+                    correct_file >> correct_string;
+            }
         }
         test_counter++;
         std::cout << std::endl;
@@ -109,7 +129,7 @@ void test_find_subdirectories()
     std::map<std::string, int> visited_directories;
     std::deque<st_subdirectory> test_subdirectories, correct_subdirectories;
     std::fstream correct_file;
-    std::string host_name = "reddit.com";
+    std::string hostname = "reddit.com";
     std::string test1 = "href=\"/feed/history/search_history\"",
                 test2 = "android-app://com.reddit.android.youtube/http/"
                         "www.youtube.com/watch?v=DAhtOhaQvk4",
@@ -122,22 +142,22 @@ void test_find_subdirectories()
                 test8 = "href=\"/img/test.png\"",
                 test_string;
                 
-    find_subdirectories(test1, host_name, visited_directories, 
-                       test_subdirectories);
-    find_subdirectories(test2, host_name, visited_directories, 
-                       test_subdirectories);
-    find_subdirectories(test3, host_name, visited_directories, 
-                       test_subdirectories);
-    find_subdirectories(test4, host_name, visited_directories, 
-                       test_subdirectories);
-    find_subdirectories(test5, host_name, visited_directories, 
-                       test_subdirectories);
-    find_subdirectories(test6, host_name, visited_directories, 
-                       test_subdirectories);
-    find_subdirectories(test7, host_name, visited_directories, 
-                       test_subdirectories);
-    find_subdirectories(test8, host_name, visited_directories, 
-                       test_subdirectories);
+    find_subdirectories(test1, hostname, test_subdirectories, 
+                        visited_directories);
+    find_subdirectories(test2, hostname, test_subdirectories, 
+                        visited_directories);
+    find_subdirectories(test3, hostname, test_subdirectories, 
+                        visited_directories);
+    find_subdirectories(test4, hostname, test_subdirectories, 
+                        visited_directories);
+    find_subdirectories(test5, hostname, test_subdirectories, 
+                        visited_directories);
+    find_subdirectories(test6, hostname, test_subdirectories,
+                        visited_directories);
+    find_subdirectories(test7, hostname, test_subdirectories,
+                        visited_directories);
+    find_subdirectories(test8, hostname, test_subdirectories,
+                        visited_directories);
 
 
     correct_file.open("testing/correctFindSubdirectories.txt");  
@@ -233,11 +253,11 @@ void test_find_urls()
             test_counter++;
             continue;
         }
-        if(test_string == test_urls.front().host_name)
+        if(test_string == test_urls.front().hostname)
         { 
             std::cout << "          " << std::left << std::setw(33) 
                       << test_string << std::setw(28) 
-                      << test_urls.front().host_name << "PASS" << std::endl;
+                      << test_urls.front().hostname << "PASS" << std::endl;
             correct_file >> test_string;
 
             if(test_string == test_urls.front().subdirectory)
@@ -254,7 +274,7 @@ void test_find_urls()
         {
             std::cout << "          " << std::left << std::setw(33) 
                       << test_string << std::setw(28) 
-                      << test_urls.front().host_name << "FAIL" << std::endl;
+                      << test_urls.front().hostname << "FAIL" << std::endl;
             correct_file >> test_string;
             std::cout << "          " << std::left << std::setw(33) 
                       << test_string << std::setw(28) 
@@ -285,6 +305,16 @@ void test_obtain_get_response()
     std::string test_site_1 = "", 
                 test_site_2 = "";
 }
+
+
+
+/*******************************************************************************
+* FUNCTION: run_tests()                                                        *
+*                                                                              *
+* DESCRIPTION: Runs all of the tests that are avaiable in the testing module.  *
+*                                                                              *
+* PARAMETERS: None                                                             *
+*******************************************************************************/
 
 void run_tests()
 {

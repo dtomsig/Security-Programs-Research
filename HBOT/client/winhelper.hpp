@@ -14,17 +14,17 @@
 #include "tlhelp32.h"
 
 
-void findProcessAddress()
+void find_process_address()
 {
     
 }
 
 
 
-DWORD findProcessID(const char *processName)
+DWORD find_process_id(const char *processName)
 {
     DWORD result = 0;
-    HANDLE hProcessSnap  = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     PROCESSENTRY32 pe32;
 
     if(INVALID_HANDLE_VALUE == hProcessSnap) 
@@ -54,32 +54,34 @@ DWORD findProcessID(const char *processName)
 
 
 
-void injectDLL(std::string fileName)
+void inject_dll(std::string file_name)
 {
-    char *dllName =  new char[fileName.length()];
-    DWORD hearthStonePID; 
-    HANDLE hearthstone = OpenProcess(PROCESS_ALL_ACCESS, FALSE, hearthStonePID),
-           threadID;
-    hearthStonePID = findProcessID("Hearthstone.exe");
+    char *dll_name =  new char[file_name.length()];
+    DWORD hearthstone_pid; 
+    HANDLE hearthstone = OpenProcess(PROCESS_ALL_ACCESS, FALSE, 
+                                     hearthstone_pid),
+           thread_id;
+    hearthstone_pid = find_process_id("Hearthstone.exe");
     int n;
     LPVOID address, arg;
-    strncpy(dllName, fileName.c_str(), sizeof(fileName));
+    
+    strncpy(dll_name, file_name.c_str(), sizeof(file_name));
 
     if(hearthstone)
         std::cout << "Hearthstone was succesfully opened." << std::endl;
     else
         std::cout << "Hearthstone was not successfully opened." << std::endl;
 
-    address = (LPVOID)GetProcAddress(GetModuleHandle("kernel32.dll"), 
-                                            "LoadLibraryA");
-    arg = (LPVOID)VirtualAllocEx(hearthstone, NULL, strlen(dllName),
-    	          MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    n = WriteProcessMemory(hearthstone, arg, dllName, strlen(dllName),
-                               NULL);
-    threadID = CreateRemoteThread(hearthstone, NULL, 0, 
-                                         (LPTHREAD_START_ROUTINE)address, arg, 
-                                         0, NULL);
+    address = (LPVOID)GetProcAddress(GetModuleHandle("kernel32.dll"),
+                                     "LoadLibraryA");
+    arg = (LPVOID)VirtualAllocEx(hearthstone, NULL, strlen(dll_name),
+                                 MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    n = WriteProcessMemory(hearthstone, arg, dll_name, strlen(dll_name), NULL);
+    thread_id = CreateRemoteThread(hearthstone, NULL, 0, 
+                                   (LPTHREAD_START_ROUTINE)address, arg, 
+                                   0, NULL);
     CloseHandle(hearthstone);
+    return;
 }
 
 #endif
