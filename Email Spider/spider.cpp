@@ -109,9 +109,9 @@ void disconnect(int socket_fd)
 
 void find_emails(std::string &get_response, std::fstream &output_file)
 {
-    std::regex email_format("(?<=:[)[a-zA-Z0-9.]+@[a-zA-Z0-9]+(\\.com|"
+    std::regex email_format("[:]+[a-zA-Z0-9.]+@[a-zA-Z0-9]+(\\.com|"
                             "\\.com.pa|\\.co.uk|\\.de|\\.it|\\.gov|\\.net|"
-                            "\\.org|\\.us)(?=\])");
+                            "\\.org|\\.us)[\\]+");
     std::regex_iterator<std::string::iterator> iterator(get_response.begin(), 
                                                         get_response.end(), 
                                                         email_format);
@@ -693,7 +693,7 @@ int main(int argc, char **argv)
                                (hostname_beginning_position, 
                                 static_cast<std::string>(optarg).find("/", 
                                     hostname_beginning_position)
-                                - hostname_beginning_position);
+                                    - hostname_beginning_position);
                 
                 subdirectory = static_cast<std::string>(optarg).substr(
                                    std::min(
