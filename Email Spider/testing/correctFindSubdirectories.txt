@@ -1,8 +1,0 @@
-/feed/history/search_history
-#
-/search.aspx?browse=133
-/latestNews.rss
-/latestAdditions_1.rss
-/index.html
-/news/825/patch_notes___july_19_2010/
-threkt
